@@ -11,7 +11,10 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(lart_msgs REQUIRED)
 
-add_executable(can_bridge src/can_bridge.cpp)
+add_executable(can_bridge 
+                src/can_bridge.cpp
+                include/CAN_DBC/generated/Autonomous_temporary/autonomous_temporary.c
+              )
 
 
 ament_target_dependencies(can_bridge rclcpp std_msgs lart_msgs)
