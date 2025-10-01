@@ -1,0 +1,3 @@
+[submodule "include/CAN_DBC"]
+	path = include/CAN_DBC
+	url = https://github.com/FSLART/CAN_DBC.git
