@@ -29,6 +29,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->mission_pub = this->create_publisher<lart_msgs::msg::Mission>("/mission/acu", 10);
   this->dynamics_pub = this->create_publisher<lart_msgs::msg::Dynamics>("/dynamics", 10);
 
+
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
   read_can_thread.detach();
@@ -89,12 +90,19 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       jetson_ms_frame.can_id  = AUTONOMOUS_TEMPORARY_JETSON_MS_FRAME_ID;
       jetson_ms_frame.can_dlc = static_cast<uint8_t>(pack_len);
       this->send_can_frame(jetson_ms_frame);
-      
+
+      /* EXAMPLE USAGE OF THE ROS MESSAGES GENERATED FROM THE CAN DBC
+      lart_msgs::msg::AcuMs acu_ms_ros_msg;
+      acu_ms_ros_msg.header.stamp = this->now();
+      acu_ms_ros_msg.mission_select = acu_ms_msg.mission_select;
+      */
+
       break;
     }
     case AUTONOMOUS_TEMPORARY_VCU_RPM_FRAME_ID:{
       autonomous_temporary_vcu_rpm_t vcu_rpm_msg;
       autonomous_temporary_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
+      
       break;
     }
     case AUTONOMOUS_TEMPORARY_ACU_IGN_FRAME_ID:{
@@ -135,6 +143,8 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG2_FRAME_ID:{
       autonomous_temporary_dyn_front_sig2_t dyn_front_sig2_msg;
       autonomous_temporary_dyn_front_sig2_unpack(&dyn_front_sig2_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::Dynamics dynamics_msg;
+
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG1_FRAME_ID:{

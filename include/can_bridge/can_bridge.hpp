@@ -20,6 +20,9 @@
 #include "lart_msgs/msg/dynamics.hpp"
 #include "lart_msgs/msg/slam_stats.hpp"
 
+//Include example
+#include "lart_msgs/msg/acu_ms.hpp"
+
 #include "CAN_DBC/generated/Autonomous_temporary/autonomous_temporary.h"
 
 #define CAN_INTERFACE "can0"
@@ -35,6 +38,9 @@ class CanBridge : public rclcpp::Node
         int s; //socket descriptor
         std::mutex socket_mutex;
 
+        bool nodes_initialized = false;
+        
+        
         void read_can_frame();
         void send_can_frame(struct can_frame frame);
         void send_can_frames();
@@ -42,7 +48,6 @@ class CanBridge : public rclcpp::Node
         
         
         
-        bool nodes_initialized = false;
     
 
         // Publishers
