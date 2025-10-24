@@ -43,7 +43,16 @@ class CanBridge : public rclcpp::Node
         
         
         bool nodes_initialized = false;
-   
-};
+    
 
+        // Publishers
+        rclcpp::Publisher<lart_msgs::msg::State>::SharedPtr state_pub;
+        rclcpp::Publisher<lart_msgs::msg::Mission>::SharedPtr mission_pub;
+        rclcpp::Publisher<lart_msgs::msg::Dynamics>::SharedPtr dynamics_pub;
+
+        // Subscribers
+        rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;
+        
+
+};
 #endif // CAN_BRIDGE_HPP

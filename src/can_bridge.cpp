@@ -24,6 +24,11 @@ CanBridge::CanBridge() : Node("can_bridge"){
       exit(1);
   }
 
+  //Initiate publishers
+  this->state_pub = this->create_publisher<lart_msgs::msg::State>("/state/acu", 10);
+  this->mission_pub = this->create_publisher<lart_msgs::msg::Mission>("/mission/acu", 10);
+  this->dynamics_pub = this->create_publisher<lart_msgs::msg::Dynamics>("/dynamics", 10);
+
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
   read_can_thread.detach();
@@ -69,6 +74,22 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_ACU_MS_FRAME_ID:{
       autonomous_temporary_acu_ms_t acu_ms_msg;
       autonomous_temporary_acu_ms_unpack(&acu_ms_msg, frame.data, frame.can_dlc);
+      autonomous_temporary_jetson_ms_t jetson_ms_msg;
+      jetson_ms_msg.mission_select = acu_ms_msg.mission_select;
+      struct can_frame jetson_ms_frame;
+      this->send_can_frame(jetson_ms_frame);
+      int pack_len = autonomous_temporary_jetson_ms_pack(
+          jetson_ms_frame.data,
+          &jetson_ms_msg,
+          sizeof(jetson_ms_frame.data));
+      if (pack_len < 0) {
+          RCLCPP_ERROR(this->get_logger(), "Failed to pack jetson_ms message: %d", pack_len);
+          break;
+      }
+      jetson_ms_frame.can_id  = AUTONOMOUS_TEMPORARY_JETSON_MS_FRAME_ID;
+      jetson_ms_frame.can_dlc = static_cast<uint8_t>(pack_len);
+      this->send_can_frame(jetson_ms_frame);
+      
       break;
     }
     case AUTONOMOUS_TEMPORARY_VCU_RPM_FRAME_ID:{
@@ -82,6 +103,10 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       if(acu_ign_msg.asms==1 && !this->nodes_initialized){
         // initialize the AS nodes
       }
+      
+      if(acu_ign_msg.asms == 1 && acu_ign_msg.ign == 1){
+        //Start recording bag -> send service call to the bag recorder composable node
+      }
       break;
     }
     case AUTONOMOUS_TEMPORARY_VCU_HV_FRAME_ID:{
@@ -92,6 +117,14 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_RES_FRAME_ID:{
       autonomous_temporary_res_t res_msg;
       autonomous_temporary_res_unpack(&res_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::State state_msg;
+      state_msg.header.stamp = this->now();
+      if (res_msg.signal == 5 || res_msg.signal == 7) {
+        state_msg.data = lart_msgs::msg::State::DRIVING;
+      }else if (res_msg.signal == 0){
+        state_msg.data = lart_msgs::msg::State::EMERGENCY;
+      }
+      this->state_pub->publish(state_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG1_FRAME_ID:{
@@ -127,11 +160,6 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_ACU_STATUS_FRAME_ID:{
       autonomous_temporary_acu_status_t acu_status_msg;
       autonomous_temporary_acu_status_unpack(&acu_status_msg, frame.data, frame.can_dlc);
-      break;
-    }
-    case AUTONOMOUS_TEMPORARY_VCU_APPS_RAW_FRAME_ID:{
-      autonomous_temporary_vcu_apps_raw_t vcu_apps_raw_msg;
-      autonomous_temporary_vcu_apps_raw_unpack(&vcu_apps_raw_msg, frame.data, frame.can_dlc);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS_TX_FRAME_ID:{
