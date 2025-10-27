@@ -19,6 +19,8 @@
 #include "lart_msgs/msg/dynamics_cmd.hpp"
 #include "lart_msgs/msg/dynamics.hpp"
 #include "lart_msgs/msg/slam_stats.hpp"
+#include "lart_msgs/msg/vcu_hv.hpp"
+#include "lart_msgs/msg/dyn_front_sig1.hpp"
 
 //Include example
 #include "lart_msgs/msg/acu_ms.hpp"
@@ -54,6 +56,9 @@ class CanBridge : public rclcpp::Node
         rclcpp::Publisher<lart_msgs::msg::State>::SharedPtr state_pub;
         rclcpp::Publisher<lart_msgs::msg::Mission>::SharedPtr mission_pub;
         rclcpp::Publisher<lart_msgs::msg::Dynamics>::SharedPtr dynamics_pub;
+        rclcpp::Publisher<lart_msgs::msg::VcuHv>::SharedPtr vcu_hv_pub;
+        rclcpp::Publisher<lart_msgs::msg::DynFrontSig1>::SharedPtr dyn_front_sig1;
+        
 
         // Subscribers
         rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;
