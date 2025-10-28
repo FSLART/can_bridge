@@ -26,8 +26,11 @@
 #include "lart_msgs/msg/dyn_front_sig2.hpp"
 #include "lart_msgs/msg/dyn_rear_sig1.hpp"
 #include "lart_msgs/msg/dyn_rear_sig2.hpp"
-
 #include "lart_msgs/msg/asf_signals.hpp"
+#include "lart_msgs/msg/vcu_ign_r2d.hpp" //verificar este
+#include "lart_msgs/msg/acu_status.hpp"
+#include "lart_msgs/msg/maxon_status_tx.hpp"
+
 //Include example
 #include "lart_msgs/msg/acu_ms.hpp"
 
@@ -69,7 +72,10 @@ class CanBridge : public rclcpp::Node
         rclcpp::Publisher<lart_msgs::msg::DynRearSig1>::SharedPtr dyn_rear_sig1_pub;
         rclcpp::Publisher<lart_msgs::msg::DynRearSig2>::SharedPtr dyn_rear_sig2_pub;
         rclcpp::Publisher<lart_msgs::msg::AsfSignals>::SharedPtr asf_signals_pub;
-        
+        rclcpp::Publisher<lart_msgs::msg::VcuIgnR2d>::SharedPtr vcu_ign_r2_d_pub;
+        rclcpp::Publisher<lart_msgs::msg::AcuStatus>::SharedPtr acu_status_pub;
+        rclcpp::Publisher<lart_msgs::msg::MaxonStatusTx>::SharedPtr maxon_status_tx_pub;
+
         // Subscribers
         rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;
         

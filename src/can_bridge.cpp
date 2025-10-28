@@ -35,6 +35,9 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->dyn_rear_sig1_pub = this->create_publisher<lart_msgs::msg::DynRearSig1>("/dynrearsig1",10);
   this->dyn_rear_sig2_pub = this->create_publisher<lart_msgs::msg::DynRearSig2>("/dynrearsig2",10);
   this->asf_signals_pub = this->create_publisher<lart_msgs::msg::AsfSignals>("/asfsignals",10);
+  this->vcu_ign_r2_d_pub = this->create_publisher<lart_msgs::msg::VcuIgnR2d>("/vcuignr2d",10);
+  this->acu_status_pub = this->create_publisher<lart_msgs::msg::AcuStatus>("/acustatus",10);
+  this->maxon_status_tx_pub = this->create_publisher<lart_msgs::msg::MaxonStatusTx>("/maxonstatustx",10);
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -161,8 +164,6 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG1_FRAME_ID:{
       autonomous_temporary_dyn_front_sig1_t dyn_rear_sig1_msg;
       autonomous_temporary_dyn_front_sig1_unpack(&dyn_rear_sig1_msg, frame.data, frame.can_dlc);
-      
-      //the message of this one have this parameter "BRK_PRESS" is it like the Dyn_Front_sig1 or not?
       this->dyn_rear_sig1_pub->publish(dyn_rear_sig1_msg);
       break;
     }
@@ -181,16 +182,19 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_VCU_IGN_R2_D_FRAME_ID:{
       autonomous_temporary_vcu_ign_r2_d_t vcu_ign_r2_d_msg;
       autonomous_temporary_vcu_ign_r2_d_unpack(&vcu_ign_r2_d_msg, frame.data, frame.can_dlc);
+      this->vcu_ign_r2_d_pub->publish(vcu_ign_r2_d_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_ACU_STATUS_FRAME_ID:{
       autonomous_temporary_acu_status_t acu_status_msg;
       autonomous_temporary_acu_status_unpack(&acu_status_msg, frame.data, frame.can_dlc);
+      this->acu_status_pub->publish(acu_status_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS_TX_FRAME_ID:{
       autonomous_temporary_maxon_status_tx_t maxon_status_tx_msg;
       autonomous_temporary_maxon_status_tx_unpack(&maxon_status_tx_msg, frame.data, frame.can_dlc);
+      this->maxon_status_tx_pub->publish(maxon_status_tx);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS2_TX_FRAME_ID:{
