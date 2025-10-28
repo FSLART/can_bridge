@@ -28,9 +28,10 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->state_pub = this->create_publisher<lart_msgs::msg::State>("/state/acu", 10);
   this->mission_pub = this->create_publisher<lart_msgs::msg::Mission>("/mission/acu", 10);
   this->dynamics_pub = this->create_publisher<lart_msgs::msg::Dynamics>("/dynamics", 10);
+  this->vcu_rpm_pub = this->create_publisher<lart_msgs::msg::VcuRpm>("/vcu_rpm",10);
   this->vcu_hv_pub = this->create_publisher<lart_msgs::msg::VcuHv>("/vcuHv",10);
   this->dyn_front_sig1_pub = this->create_publisher<lart_msgs::msg::DynFrontSig1>("/dynfrontsig1",10);
-  
+  this->dyn_front_sig2_pub = this->create_publisher<lart_msgs::msg::DynFrontSig2>("/dynfrontsig2",10);
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -104,7 +105,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_VCU_RPM_FRAME_ID:{
       autonomous_temporary_vcu_rpm_t vcu_rpm_msg;
       autonomous_temporary_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
-      
+      this->vcu_rpm_pub->publish(vcu_hv_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_ACU_IGN_FRAME_ID:{
@@ -138,7 +139,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       this->state_pub->publish(state_msg);
       break;
     }
-    //REVER
+    //REVER!!!!!!
     case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG1_FRAME_ID:{
       autonomous_temporary_dyn_front_sig1_t dyn_front_sig1_msg;
       autonomous_temporary_dyn_front_sig1_unpack(&dyn_front_sig1_msg, frame.data, frame.can_dlc);
@@ -151,7 +152,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG2_FRAME_ID:{
       autonomous_temporary_dyn_front_sig2_t dyn_front_sig2_msg;
       autonomous_temporary_dyn_front_sig2_unpack(&dyn_front_sig2_msg, frame.data, frame.can_dlc);
-
+      this->dyn_front_sig2_pub->publish(dyn_front_sig2_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG1_FRAME_ID:{
