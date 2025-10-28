@@ -39,8 +39,8 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->acu_status_pub = this->create_publisher<lart_msgs::msg::AcuStatus>("/acustatus",10);
   this->maxon_status_tx_pub = this->create_publisher<lart_msgs::msg::MaxonStatusTx>("/maxonstatustx",10);
   this->maxon_status2_tx_pub = this->create_publisher<lart_msgs::msg::MaxonStatus2Tx>("/maxonstatus2tx",10);
-
-
+  this->maxon_position_tx_pub = this->create_publisher<lart_msgs::msg::MaxonPositionTx>("/maxonpositiontx",10);
+  this->maxon_velocity_tx_pub = this->create_publisher<lart_msgs::msg::MaxonVelocityTx>("/maxonvelocitytx",10);
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
   read_can_thread.detach();
@@ -208,11 +208,13 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_MAXON_POSITION_TX_FRAME_ID:{
       autonomous_temporary_maxon_position_tx_t maxon_position_tx_msg;
       autonomous_temporary_maxon_position_tx_unpack(&maxon_position_tx_msg, frame.data, frame.can_dlc);
+      this->maxon_position_tx_pub->publish(maxon_position_tx_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_VELOCITY_TX_FRAME_ID:{
       autonomous_temporary_maxon_velocity_tx_t maxon_velocity_tx_msg;
       autonomous_temporary_maxon_velocity_tx_unpack(&maxon_velocity_tx_msg, frame.data, frame.can_dlc);
+      this->maxon_velocity_tx_pub->publish(maxon_velocity_tx_msg);
       break;
     }
   }

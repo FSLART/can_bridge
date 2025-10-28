@@ -31,6 +31,8 @@
 #include "lart_msgs/msg/acu_status.hpp"
 #include "lart_msgs/msg/maxon_status_tx.hpp"
 #include "lart_msgs/msg/maxon_status2_tx.hpp"
+#include "lart_msgs/msg/maxon_position_tx.hpp"
+#include "lart_msgs/msg/maxon_velocity_tx.hpp"
 
 
 //Include example
@@ -78,8 +80,11 @@ class CanBridge : public rclcpp::Node
         rclcpp::Publisher<lart_msgs::msg::AcuStatus>::SharedPtr acu_status_pub;
         rclcpp::Publisher<lart_msgs::msg::MaxonStatusTx>::SharedPtr maxon_status_tx_pub;
         rclcpp::Publisher<lart_msgs::msg::MaxonStatus2Tx>::SharedPtr maxon_status2_tx_pub;
+        rclcpp::Publisher<lart_msgs::msg::MaxonPositionTx>::SharedPtr maxon_position_tx_pub;
+        rclcpp::Publisher<lart_msgs::msg::MaxonVelocityTx>::SharedPtr maxon_velocity_tx_pub;
 
 
+        //MaxonVelocityTx
         // Subscribers
         rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;
         
