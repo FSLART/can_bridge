@@ -26,6 +26,8 @@
 #include "lart_msgs/msg/dyn_front_sig2.hpp"
 #include "lart_msgs/msg/dyn_rear_sig1.hpp"
 #include "lart_msgs/msg/dyn_rear_sig2.hpp"
+
+#include "lart_msgs/msg/asf_signals.hpp"
 //Include example
 #include "lart_msgs/msg/acu_ms.hpp"
 
@@ -66,7 +68,8 @@ class CanBridge : public rclcpp::Node
         rclcpp::Publisher<lart_msgs::msg::DynFrontSig2>::SharedPtr dyn_front_sig2_pub;
         rclcpp::Publisher<lart_msgs::msg::DynRearSig1>::SharedPtr dyn_rear_sig1_pub;
         rclcpp::Publisher<lart_msgs::msg::DynRearSig2>::SharedPtr dyn_rear_sig2_pub;
-
+        rclcpp::Publisher<lart_msgs::msg::AsfSignals>::SharedPtr asf_signals_pub;
+        
         // Subscribers
         rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;
         

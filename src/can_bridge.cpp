@@ -34,6 +34,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->dyn_front_sig2_pub = this->create_publisher<lart_msgs::msg::DynFrontSig2>("/dynfrontsig2",10);
   this->dyn_rear_sig1_pub = this->create_publisher<lart_msgs::msg::DynRearSig1>("/dynrearsig1",10);
   this->dyn_rear_sig2_pub = this->create_publisher<lart_msgs::msg::DynRearSig2>("/dynrearsig2",10);
+  this->asf_signals_pub = this->create_publisher<lart_msgs::msg::AsfSignals>("/asfsignals",10);
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -174,6 +175,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_ASF_SIGNALS_FRAME_ID:{
       autonomous_temporary_asf_signals_t asf_signals_msg;
       autonomous_temporary_asf_signals_unpack(&asf_signals_msg, frame.data, frame.can_dlc);
+      this->asf_signals_pub->publish(asf_signals_pub);
       break;
     }
     case AUTONOMOUS_TEMPORARY_VCU_IGN_R2_D_FRAME_ID:{
