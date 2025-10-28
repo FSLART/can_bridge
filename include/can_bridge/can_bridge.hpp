@@ -30,6 +30,8 @@
 #include "lart_msgs/msg/vcu_ign_r2d.hpp" //verificar este
 #include "lart_msgs/msg/acu_status.hpp"
 #include "lart_msgs/msg/maxon_status_tx.hpp"
+#include "lart_msgs/msg/maxon_status2_tx.hpp"
+
 
 //Include example
 #include "lart_msgs/msg/acu_ms.hpp"
@@ -75,6 +77,8 @@ class CanBridge : public rclcpp::Node
         rclcpp::Publisher<lart_msgs::msg::VcuIgnR2d>::SharedPtr vcu_ign_r2_d_pub;
         rclcpp::Publisher<lart_msgs::msg::AcuStatus>::SharedPtr acu_status_pub;
         rclcpp::Publisher<lart_msgs::msg::MaxonStatusTx>::SharedPtr maxon_status_tx_pub;
+        rclcpp::Publisher<lart_msgs::msg::MaxonStatus2Tx>::SharedPtr maxon_status2_tx_pub;
+
 
         // Subscribers
         rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;

@@ -38,6 +38,8 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->vcu_ign_r2_d_pub = this->create_publisher<lart_msgs::msg::VcuIgnR2d>("/vcuignr2d",10);
   this->acu_status_pub = this->create_publisher<lart_msgs::msg::AcuStatus>("/acustatus",10);
   this->maxon_status_tx_pub = this->create_publisher<lart_msgs::msg::MaxonStatusTx>("/maxonstatustx",10);
+  this->maxon_status2_tx_pub = this->create_publisher<lart_msgs::msg::MaxonStatus2Tx>("/maxonstatus2tx",10);
+
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -200,6 +202,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS2_TX_FRAME_ID:{
       autonomous_temporary_maxon_status2_tx_t maxon_status2_tx_msg;
       autonomous_temporary_maxon_status2_tx_unpack(&maxon_status2_tx_msg, frame.data, frame.can_dlc);
+      this->maxon_status2_tx_pub->publish(maxon_status2_tx_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_POSITION_TX_FRAME_ID:{
