@@ -32,6 +32,8 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->vcu_hv_pub = this->create_publisher<lart_msgs::msg::VcuHv>("/vcuHv",10);
   this->dyn_front_sig1_pub = this->create_publisher<lart_msgs::msg::DynFrontSig1>("/dynfrontsig1",10);
   this->dyn_front_sig2_pub = this->create_publisher<lart_msgs::msg::DynFrontSig2>("/dynfrontsig2",10);
+  this->dyn_rear_sig1_pub = this->create_publisher<lart_msgs::msg::DynRearSig1>("/dynrearsig1",10);
+  this->dyn_rear_sig2_pub = this->create_publisher<lart_msgs::msg::DynRearSig2>("/dynrearsig2",10);
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -158,11 +160,15 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG1_FRAME_ID:{
       autonomous_temporary_dyn_front_sig1_t dyn_rear_sig1_msg;
       autonomous_temporary_dyn_front_sig1_unpack(&dyn_rear_sig1_msg, frame.data, frame.can_dlc);
+      
+      //the message of this one have this parameter "BRK_PRESS" is it like the Dyn_Front_sig1 or not?
+      this->dyn_rear_sig1_pub->publish(dyn_rear_sig1_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG2_FRAME_ID:{
       autonomous_temporary_dyn_rear_sig2_t dyn_rear_sig2_msg;
       autonomous_temporary_dyn_rear_sig2_unpack(&dyn_rear_sig2_msg, frame.data, frame.can_dlc);
+      this->dyn_rear_sig2_pub->publish(dyn_rear_sig2_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_ASF_SIGNALS_FRAME_ID:{
