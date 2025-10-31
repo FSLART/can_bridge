@@ -61,6 +61,8 @@ class CanBridge : public rclcpp::Node
         void send_can_frames();
         void handle_can_frame(struct can_frame frame);
         
+        //Callbacks
+        void State_CallBack(cons lart_msgs::msg::State::SharedPtr msg); // verificar
         
         
     

@@ -41,6 +41,10 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->maxon_status2_tx_pub = this->create_publisher<lart_msgs::msg::MaxonStatus2Tx>("/maxonstatus2tx",10);
   this->maxon_position_tx_pub = this->create_publisher<lart_msgs::msg::MaxonPositionTx>("/maxonpositiontx",10);
   this->maxon_velocity_tx_pub = this->create_publisher<lart_msgs::msg::MaxonVelocityTx>("/maxonvelocitytx",10);
+
+  //Initiate Subscribers
+  this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state",10,std::bind(&CanBridge::&State_CallBack,this,_1)); //verificar
+
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
   read_can_thread.detach();
@@ -78,6 +82,10 @@ void CanBridge::send_can_frames(){
   }
 }
 
+void CanBridge::State_CallBack(const lart_msgs::msg::State::SharedPtr msg){
+  // struct can_frame 
+}
+
 void CanBridge::handle_can_frame(struct can_frame frame){
   // Handle the received CAN frame
   RCLCPP_INFO(this->get_logger(), "Received CAN frame with ID: 0x%X", frame.can_id);
@@ -89,7 +97,6 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_temporary_jetson_ms_t jetson_ms_msg;
       jetson_ms_msg.mission_select = acu_ms_msg.mission_select;
       struct can_frame jetson_ms_frame;
-      this->send_can_frame(jetson_ms_frame);
       int pack_len = autonomous_temporary_jetson_ms_pack(
           jetson_ms_frame.data,
           &jetson_ms_msg,
