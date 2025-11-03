@@ -82,8 +82,18 @@ void CanBridge::send_can_frames(){
   }
 }
 
+//verificar
 void CanBridge::State_CallBack(const lart_msgs::msg::State::SharedPtr msg){
-  // struct can_frame 
+  autonomous_temporary_as_state_t as_state_msg;
+  as_state_msg.state = msg.state;
+  struct can_frame as_state_frame;
+  int pack_len = autonomous_temporary_as_state_pack(as_state_frame.data,&as_state_msg,sizeof(as_state_msg));
+  if(pack_len < 0){
+    RCLCPP_ERROR(this->get_logger(), "Failed to pack as_state message: %d", pack_len);
+  }
+  as_state_frame.can_id = AUTONOMOUS_TEMPORARY_AS_STATE_FRAME_ID;
+  as_state_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(as_state_frame);
 }
 
 void CanBridge::handle_can_frame(struct can_frame frame){
