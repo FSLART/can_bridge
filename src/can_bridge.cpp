@@ -83,7 +83,7 @@ void CanBridge::send_can_frames(){
 }
 
 //verificar
-void CanBridge::State_CallBack(const lart_msgs::msg::State::SharedPtr msg){
+void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
   autonomous_temporary_as_state_t as_state_msg;
   as_state_msg.state = msg.state;
   struct can_frame as_state_frame;
@@ -94,6 +94,11 @@ void CanBridge::State_CallBack(const lart_msgs::msg::State::SharedPtr msg){
   as_state_frame.can_id = AUTONOMOUS_TEMPORARY_AS_STATE_FRAME_ID;
   as_state_frame.can_dlc = static_cast<uint8_t>(pack_len);
   this->send_can_frame(as_state_frame);
+}
+
+void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
+  //fazer  este é o AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID
+
 }
 
 void CanBridge::handle_can_frame(struct can_frame frame){

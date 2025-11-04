@@ -62,8 +62,8 @@ class CanBridge : public rclcpp::Node
         void handle_can_frame(struct can_frame frame);
         
         //Callbacks
-        void State_CallBack(cons lart_msgs::msg::State::SharedPtr msg); // verificar
-        
+        void StateCallBack(cons lart_msgs::msg::State::SharedPtr msg); // verificar
+        void ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg); //verificar
         
     
 
@@ -89,7 +89,7 @@ class CanBridge : public rclcpp::Node
         //MaxonVelocityTx
         // Subscribers
         rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;
-        
+        rlcpp::Subscription<lart_msgs::msg::SlamStats>::SharedPtr cone_count_sub //verificar
 
 };
 #endif // CAN_BRIDGE_HPP
