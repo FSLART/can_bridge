@@ -43,7 +43,9 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->maxon_velocity_tx_pub = this->create_publisher<lart_msgs::msg::MaxonVelocityTx>("/maxonvelocitytx",10);
 
   //Initiate Subscribers
-  this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state",10,std::bind(&CanBridge::&State_CallBack,this,_1)); //verificar
+  //verificar
+  this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state",10,std::bind(&CanBridge::&StateCallBack,this,_1)); 
+  this->ekf_State_sub = this->create_subscription<lart_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::&ekfStateCallback,this,_1));
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -98,6 +100,8 @@ void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
 
 void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
   //fazer  este é o AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID
+  autonomous_temporary_jetson_debug_t jetson_debug_msg;
+    
 
 }
 
