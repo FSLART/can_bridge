@@ -88,7 +88,7 @@ void CanBridge::send_can_frames(){
 void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
   autonomous_temporary_as_state_t as_state_msg;
   as_state_msg.state = msg.state;
-  struct can_frame as_state_frame;
+  struct can_frame as_state_frame; //duvida isto existe ou posso dar um nome qualquer?
   int pack_len = autonomous_temporary_as_state_pack(as_state_frame.data,&as_state_msg,sizeof(as_state_msg));
   if(pack_len < 0){
     RCLCPP_ERROR(this->get_logger(), "Failed to pack as_state message: %d", pack_len);
@@ -101,8 +101,17 @@ void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
 void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
   //fazer  este é o AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID
   autonomous_temporary_jetson_debug_t jetson_debug_msg;
-    
-
+    jetson_debug_msg.state = msg.state;
+    struct can_frame ekf_state_frame;
+    int pack_len = autonomous_temporary_jetson_debug_pack(ekf_state_frame.data,&jetson_debug_msg,sizeof(jetson_debug_msg));
+    if(pack_len < 0){
+      RCLCCP_ERROR(this->get_logger(), "Failed to pack EkfState message: %d", pack_len);
+      //duvida aqui n devia sair?
+    }
+    ekf_state_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID;
+    ekf_state_frame.can_dlc = static_cast<uint8_t>(pack_len);
+    this->send_can_frame(ekf_state_frame);
+  
 }
 
 void CanBridge::handle_can_frame(struct can_frame frame){
