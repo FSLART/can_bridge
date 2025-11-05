@@ -45,7 +45,8 @@ CanBridge::CanBridge() : Node("can_bridge"){
   //Initiate Subscribers
   //verificar
   this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state",10,std::bind(&CanBridge::&StateCallBack,this,_1)); 
-  this->ekf_State_sub = this->create_subscription<lart_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::&ekfStateCallback,this,_1));
+  this->ekf_state_sub = this->create_subscription<lart_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::&ekfStateCallback,this,_1));
+  this->ekf_stats_sub = this->create_subscription<lart_msgs::msg::SlamStats>("/SlamStats",10,std::bind(&CanBridge::&ekfStatsCallback,this,_1));
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -77,10 +78,10 @@ void CanBridge::send_can_frame(struct can_frame frame){
 
 void CanBridge::send_can_frames(){
   while(rclcpp::ok()){
-      {
-          // this->sendState();
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    {
+      // this->sendState();
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
 }
 
@@ -99,19 +100,30 @@ void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
 }
 
 void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
-  //fazer  este é o AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID
   autonomous_temporary_jetson_debug_t jetson_debug_msg;
-    jetson_debug_msg.state = msg.state;
-    struct can_frame ekf_state_frame;
-    int pack_len = autonomous_temporary_jetson_debug_pack(ekf_state_frame.data,&jetson_debug_msg,sizeof(jetson_debug_msg));
-    if(pack_len < 0){
-      RCLCCP_ERROR(this->get_logger(), "Failed to pack EkfState message: %d", pack_len);
-      //duvida aqui n devia sair?
-    }
-    ekf_state_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID;
-    ekf_state_frame.can_dlc = static_cast<uint8_t>(pack_len);
-    this->send_can_frame(ekf_state_frame);
-  
+  jetson_debug_msg.state = msg.state;
+  struct can_frame ekf_state_frame;
+  int pack_len = autonomous_temporary_jetson_debug_pack(ekf_state_frame.data,&jetson_debug_msg,sizeof(jetson_debug_msg));
+  if(pack_len < 0){
+    RCLCCP_ERROR(this->get_logger(), "Failed to pack EkfState message: %d", pack_len);
+    //duvida aqui n devia sair?
+  }
+  ekf_state_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID;
+  ekf_state_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(ekf_state_frame); 
+}
+
+void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg){
+  autonomous_temporary_jetson_data_1_t  jetson_data_1_msg;
+  jetson_data_1_msg.state = msg.state;
+  struct can_frame ekf_stats_frame;
+  int pack_len = autonomous_temporary_jetson_data_1_pack(ekf_stats_frame.data,&jetson_data_1_msg,sizeof(jetson_data_1_msg));
+  if(pack_len < 0){
+    RCLCCP_ERROR(this->get_logger(), "Failed to pack EkfStats message: %d", pack_len);
+  }
+  ekf_stats_frame.can_id AUTONOMOUS_TEMPORARY_JETSON_DATA_1_FRAME_ID;
+  ekf_stats_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(ekf_stats_frame);
 }
 
 void CanBridge::handle_can_frame(struct can_frame frame){
