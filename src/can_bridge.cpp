@@ -89,7 +89,7 @@ void CanBridge::send_can_frames(){
 //verificar
 void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
   autonomous_temporary_as_state_t as_state_msg;
-  as_state_msg.state = msg.data;
+  as_state_msg.state = msg->data;
   struct can_frame as_state_frame; //duvida isto existe ou posso dar um nome qualquer?
   int pack_len = autonomous_temporary_as_state_pack(as_state_frame.data,&as_state_msg,sizeof(as_state_msg));
   if(pack_len < 0){
@@ -102,8 +102,8 @@ void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
 
 void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
   autonomous_temporary_jetson_debug_t jetson_debug_msg;
-  jetson_debug_msg.pos_x = msg.pose.position.x;
-  jetson_debug_msg.pos_y = msg.pose.position.y;
+  jetson_debug_msg.pos_x = msg->pose.position.x;
+  jetson_debug_msg.pos_y = msg->pose.position.y;
   struct can_frame ekf_state_frame;
   std::ifstream file("/sys/devices/virtual/thermal/thermal_zone1/temp");
   int temp;
@@ -122,7 +122,6 @@ void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPt
 
 void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg){
   autonomous_temporary_jetson_data_1_t  jetson_data_1_msg;
-  jetson_data_1_msg.state = msg.state;
   struct can_frame ekf_stats_frame;
   //not filled
   jetson_data_1_msg.actual_angle = 0;
