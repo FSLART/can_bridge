@@ -40,4 +40,8 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+include_directories(
+  include ${CMAKE_SOURCE_DIR}/../lart_common
+)
+
 ament_package()
