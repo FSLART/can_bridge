@@ -46,7 +46,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
   //verificar
   this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state",10,std::bind(&CanBridge::StateCallBack,this,_1)); 
   this->ekf_state_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::ekfStateCallback,this,_1));
-  this->ekf_stats_sub = this->create_subscription<geometry_msgs::msg::SlamStats>("/SlamStats",10,std::bind(&CanBridge::ekfStatsCallback,this,_1));
+  this->ekf_stats_sub = this->create_subscription<lart_msgs::msg::SlamStats>("/SlamStats",10,std::bind(&CanBridge::ekfStatsCallback,this,_1));
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
