@@ -44,9 +44,9 @@ CanBridge::CanBridge() : Node("can_bridge"){
 
   //Initiate Subscribers
   //verificar
-  this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state",10,std::bind(&CanBridge::&StateCallBack,this,_1)); 
-  this->ekf_state_sub = this->create_subscription<lart_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::&ekfStateCallback,this,_1));
-  this->ekf_stats_sub = this->create_subscription<lart_msgs::msg::SlamStats>("/SlamStats",10,std::bind(&CanBridge::&ekfStatsCallback,this,_1));
+  this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state",10,std::bind(&CanBridge::StateCallBack,this,_1)); 
+  this->ekf_state_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::ekfStateCallback,this,_1));
+  this->ekf_stats_sub = this->create_subscription<geometry_msgs::msg::SlamStats>("/SlamStats",10,std::bind(&CanBridge::ekfStatsCallback,this,_1));
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -110,7 +110,7 @@ void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPt
   jetson_debug_msg.temperature = final_temp;
   int pack_len = autonomous_temporary_jetson_debug_pack(ekf_state_frame.data,&jetson_debug_msg,sizeof(jetson_debug_msg));
   if(pack_len < 0){
-    RCLCCP_ERROR(this->get_logger(), "Failed to pack EkfState message: %d", pack_len);
+    RCLCPP_ERROR(this->get_logger(), "Failed to pack EkfState message: %d", pack_len);
     //duvida aqui n devia sair?
   }
   ekf_state_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID;
@@ -125,11 +125,15 @@ void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
   //not filled
   jetson_data_1_msg.actual_angle = 0;
   jetson_data_1_msg.actual_speed = 0;
-  //jetson_data_1_msg.
+  jetson_data_1_msg.current_cone_count = 0;
+  jetson_data_1_msg.lap_count = 0;
+  jetson_data_1_msg.target_angle = 0;
+  jetson_data_1_msg.target_speed = 0;
+  jetson_data_1_msg.total_cone_count = 0;
   
   int pack_len = autonomous_temporary_jetson_data_1_pack(ekf_stats_frame.data,&jetson_data_1_msg,sizeof(jetson_data_1_msg));
   if(pack_len < 0){
-    RCLCCP_ERROR(this->get_logger(), "Failed to pack EkfStats message: %d", pack_len);
+    RCLCPP_ERROR(this->get_logger(), "Failed to pack EkfStats message: %d", pack_len);
   }
   ekf_stats_frame.can_id AUTONOMOUS_TEMPORARY_JETSON_DATA_1_FRAME_ID;
   ekf_stats_frame.can_dlc = static_cast<uint8_t>(pack_len);
