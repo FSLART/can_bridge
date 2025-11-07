@@ -34,6 +34,8 @@
 #include "lart_msgs/msg/maxon_position_tx.hpp"
 #include "lart_msgs/msg/maxon_velocity_tx.hpp"
 
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/vector3_stamped.hpp>
 
 //Include example
 #include "lart_msgs/msg/acu_ms.hpp"
@@ -62,7 +64,7 @@ class CanBridge : public rclcpp::Node
         void handle_can_frame(struct can_frame frame);
         
         //Callbacks
-        void StateCallBack(cons lart_msgs::msg::State::SharedPtr msg);
+        void StateCallBack(const lart_msgs::msg::State::SharedPtr msg);
         void ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
         //include is on state_controler.hpp
         void ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg);

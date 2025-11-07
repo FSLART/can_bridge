@@ -103,6 +103,11 @@ void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPt
   autonomous_temporary_jetson_debug_t jetson_debug_msg;
   jetson_debug_msg.state = msg.state;
   struct can_frame ekf_state_frame;
+  std::ifstream file("/sys/devices/virtual/thermal/thermal_zone1/temp");
+  int temp;
+  file >> temp;
+  float final_temp = temp / 1000.0 ;
+  jetson_debug_msg.temperature = final_temp;
   int pack_len = autonomous_temporary_jetson_debug_pack(ekf_state_frame.data,&jetson_debug_msg,sizeof(jetson_debug_msg));
   if(pack_len < 0){
     RCLCCP_ERROR(this->get_logger(), "Failed to pack EkfState message: %d", pack_len);
@@ -117,12 +122,18 @@ void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
   autonomous_temporary_jetson_data_1_t  jetson_data_1_msg;
   jetson_data_1_msg.state = msg.state;
   struct can_frame ekf_stats_frame;
+  //not filled
+  jetson_data_1_msg.actual_angle = 0;
+  jetson_data_1_msg.actual_speed = 0;
+  //jetson_data_1_msg.
+  
   int pack_len = autonomous_temporary_jetson_data_1_pack(ekf_stats_frame.data,&jetson_data_1_msg,sizeof(jetson_data_1_msg));
   if(pack_len < 0){
     RCLCCP_ERROR(this->get_logger(), "Failed to pack EkfStats message: %d", pack_len);
   }
   ekf_stats_frame.can_id AUTONOMOUS_TEMPORARY_JETSON_DATA_1_FRAME_ID;
   ekf_stats_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  
   this->send_can_frame(ekf_stats_frame);
 }
 
