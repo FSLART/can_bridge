@@ -75,7 +75,7 @@ class CanBridge : public rclcpp::Node
         rclcpp::Publisher<lart_msgs::msg::State>::SharedPtr state_pub;
         rclcpp::Publisher<lart_msgs::msg::Mission>::SharedPtr mission_pub;
         rclcpp::Publisher<lart_msgs::msg::Dynamics>::SharedPtr dynamics_pub;
-        rclcpp::publisher<lart_msgs::msg::VcuRpm>::SharedPtr vcu_rpm_pub;
+        rclcpp::Publisher<lart_msgs::msg::VcuRpm>::SharedPtr vcu_rpm_pub;
         rclcpp::Publisher<lart_msgs::msg::VcuHv>::SharedPtr vcu_hv_pub;
         rclcpp::Publisher<lart_msgs::msg::DynFrontSig1>::SharedPtr dyn_front_sig1_pub;
         rclcpp::Publisher<lart_msgs::msg::DynFrontSig2>::SharedPtr dyn_front_sig2_pub;
@@ -93,7 +93,7 @@ class CanBridge : public rclcpp::Node
         //MaxonVelocityTx
         // Subscribers
         rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;
-        rlcpp::Subscription<lart_msgs::msg::PoseStamped>::SharedPtr ekf_state_sub; //verificar
-        rlcpp::Subscription<lart_msgs::msg::SlamStats>::SharedPtr ekf_stats_sub;
+        rclcpp::Subscription<lart_msgs::msg::PoseStamped>::SharedPtr ekf_state_sub; //verificar
+        rclcpp::Subscription<lart_msgs::msg::SlamStats>::SharedPtr ekf_stats_sub;
 };
 #endif // CAN_BRIDGE_HPP
