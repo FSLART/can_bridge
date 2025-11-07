@@ -121,6 +121,7 @@ void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPt
 }
 
 void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg){
+  (void)msg;
   autonomous_temporary_jetson_data_1_t  jetson_data_1_msg;
   struct can_frame ekf_stats_frame;
   //not filled
