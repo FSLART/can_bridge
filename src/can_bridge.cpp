@@ -1,4 +1,5 @@
 #include "can_bridge/can_bridge.hpp"
+using std::placeholders::_1;
 
 
 CanBridge::CanBridge() : Node("can_bridge"){
@@ -88,7 +89,7 @@ void CanBridge::send_can_frames(){
 //verificar
 void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
   autonomous_temporary_as_state_t as_state_msg;
-  as_state_msg.state = msg.state;
+  as_state_msg.state = msg.data;
   struct can_frame as_state_frame; //duvida isto existe ou posso dar um nome qualquer?
   int pack_len = autonomous_temporary_as_state_pack(as_state_frame.data,&as_state_msg,sizeof(as_state_msg));
   if(pack_len < 0){
@@ -101,7 +102,8 @@ void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
 
 void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
   autonomous_temporary_jetson_debug_t jetson_debug_msg;
-  jetson_debug_msg.state = msg.state;
+  jetson_debug_msg.pos_x = msg.pose.position.x;
+  jetson_debug_msg.pos_y = msg.pose.position.y;
   struct can_frame ekf_state_frame;
   std::ifstream file("/sys/devices/virtual/thermal/thermal_zone1/temp");
   int temp;
@@ -175,7 +177,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_VCU_RPM_FRAME_ID:{
       autonomous_temporary_vcu_rpm_t vcu_rpm_msg;
       autonomous_temporary_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
-      this->vcu_rpm_pub->publish(vcu_hv_msg);
+      this->vcu_rpm_pub->publish(vcu_rpm_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_ACU_IGN_FRAME_ID:{
