@@ -11,6 +11,9 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(lart_msgs REQUIRED)
 
+include_directories(
+  include ${CMAKE_SOURCE_DIR}/../lart_common
+)
 add_executable(can_bridge 
                 src/can_bridge.cpp
                 include/CAN_DBC/generated/Autonomous_temporary/autonomous_temporary.c
@@ -40,8 +43,5 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-include_directories(
-  include ${CMAKE_SOURCE_DIR}/../lart_common
-)
 
 ament_package()

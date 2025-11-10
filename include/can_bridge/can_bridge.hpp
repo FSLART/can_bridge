@@ -95,5 +95,7 @@ class CanBridge : public rclcpp::Node
         rclcpp::Subscription<lart_msgs::msg::State>::SharedPtr state_sub;
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr ekf_state_sub; //verificar
         rclcpp::Subscription<lart_msgs::msg::SlamStats>::SharedPtr ekf_stats_sub;
+        rclcpp::Subscription<lart_msgs::msg::DynamicsCMD>::SharedPtr control_sub;
+        
 };
 #endif // CAN_BRIDGE_HPP

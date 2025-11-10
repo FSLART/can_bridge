@@ -48,6 +48,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state",10,std::bind(&CanBridge::StateCallBack,this,_1)); 
   this->ekf_state_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::ekfStateCallback,this,_1));
   this->ekf_stats_sub = this->create_subscription<lart_msgs::msg::SlamStats>("/SlamStats",10,std::bind(&CanBridge::ekfStatsCallback,this,_1));
+  this->control_sub = this->create_subscription<lart_msgs::msg::DynamicsCMD>("/DynamicsCMD",10,std::bind(&CanBridge::ControlCallback,this,_1));
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -142,6 +143,17 @@ void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
   
   this->send_can_frame(ekf_stats_frame);
 }
+
+//Verificar e acabar!!!!1
+void CanBridge::ControlCallback(conts lart_msgs::msg::DynamicsCMD::SharedPtr msg){
+  //este que tenho de usar ? 
+  autonomous_temporary_dl_msg_1_t control_msg;
+  struct can_frame control_frame;
+  control_frame.can_id = canTotalTeste; //to be defined 
+  control_frame.can_dlc = 2;
+  this->send_can_frame(control_frame);
+}
+
 
 void CanBridge::handle_can_frame(struct can_frame frame){
   // Handle the received CAN frame
@@ -260,7 +272,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS_TX_FRAME_ID:{
       autonomous_temporary_maxon_status_tx_t maxon_status_tx_msg;
       autonomous_temporary_maxon_status_tx_unpack(&maxon_status_tx_msg, frame.data, frame.can_dlc);
-      this->maxon_status_tx_pub->publish(maxon_status_tx);
+      this->maxon_status_tx_pub->publish(maxon_status_tx_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS2_TX_FRAME_ID:{
