@@ -100,7 +100,7 @@ void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg){
     RCLCPP_ERROR(this->get_logger(), "Failed to pack as_state message: %d", pack_len);
   }
   as_state_frame.can_id = AUTONOMOUS_TEMPORARY_AS_STATE_FRAME_ID;
-  as_state_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  as_state_frame.can_dlc = AUTONOMOUS_TEMPORARY_AS_STATE_LENGTH;
   this->send_can_frame(as_state_frame);
 }
 
@@ -120,7 +120,7 @@ void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPt
     //duvida aqui n devia sair?
   }
   ekf_state_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID;
-  ekf_state_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  ekf_state_frame.can_dlc = AUTONOMOUS_TEMPORARY_JETSON_DEBUG_LENGTH;
   this->send_can_frame(ekf_state_frame); 
 }
 
@@ -142,7 +142,7 @@ void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
     RCLCPP_ERROR(this->get_logger(), "Failed to pack EkfStats message: %d", pack_len);
   }
   ekf_stats_frame.can_id AUTONOMOUS_TEMPORARY_JETSON_DATA_1_FRAME_ID;
-  ekf_stats_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  ekf_stats_frame.can_dlc = AUTONOMOUS_TEMPORARY_JETSON_DATA_1_LENGTH;
   
   this->send_can_frame(ekf_stats_frame);
 }
