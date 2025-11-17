@@ -31,7 +31,7 @@
 #define MAXON_NODE_ID 0x08
 #define PROFILE_VELOCITY 5000
 #define PROFILE_ACCELERATION 7000
-
+        
 //this does switchOn/enable and togle the 'newPosition' bit
 static const struct can_frame newValueFrame = {
     .can_id = 0x205,

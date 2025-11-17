@@ -209,6 +209,9 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_temporary_acu_ign_unpack(&acu_ign_msg, frame.data, frame.can_dlc);
       if(acu_ign_msg.asms==1 && !this->nodes_initialized){
         // initialize the AS nodes
+        turnOnCANOpenDevicesFrame();
+        std::this_thread::sleep_for(std::chrono::microseconds(200));
+        
       }
       
       if(acu_ign_msg.asms == 1 && acu_ign_msg.ign == 1){
@@ -290,13 +293,22 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS2_TX_FRAME_ID:{
       autonomous_temporary_maxon_status2_tx_t maxon_status2_tx_msg;
       autonomous_temporary_maxon_status2_tx_unpack(&maxon_status2_tx_msg, frame.data, frame.can_dlc);
-      this->maxon_status2_tx_pub->publish(maxon_status2_tx_msg);
+      lart_msgs::msg::MaxonStatus2Tx ros_msg;
+      ros_msg.error_code = maxon_status2_tx_msg.error_code;
+      ros_msg.status_word = maxon_status2_tx_msg.status_word;
+      ros_msg.current_average_value = maxon_status2_tx_msg.current_average_value;
+
+      this->maxon_status2_tx_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_POSITION_TX_FRAME_ID:{
       autonomous_temporary_maxon_position_tx_t maxon_position_tx_msg;
       autonomous_temporary_maxon_position_tx_unpack(&maxon_position_tx_msg, frame.data, frame.can_dlc);
-      this->maxon_position_tx_pub->publish(maxon_position_tx_msg);
+      lart_msgs::msg::MaxonPositionTx ros_msg;
+      ros_msg.status_word = maxon_position_tx_msg.status_word;
+      ros_msg.actual_position = maxon_position_tx_msg.actual_position;
+      ros_msg.actual_torque = maxon_position_tx_msg.actual_torque; 
+      this->maxon_position_tx_pub->publish(ros_msg);
       if(!maxon_offset_defined){
         maxon_offset = maxon_position_tx_msg.actual_position;
         maxon_offset_defined = true;
@@ -306,7 +318,11 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_MAXON_VELOCITY_TX_FRAME_ID:{
       autonomous_temporary_maxon_velocity_tx_t maxon_velocity_tx_msg;
       autonomous_temporary_maxon_velocity_tx_unpack(&maxon_velocity_tx_msg, frame.data, frame.can_dlc);
-      this->maxon_velocity_tx_pub->publish(maxon_velocity_tx_msg);
+      lart_msgs::msg::MaxonVelocityTx ros_msg;
+      ros_msg.status_word = maxon_velocity_tx_msg.status_word;
+      ros_msg.actual_velocity = maxon_velocity_tx_msg.actual_velocity;
+      ros_msg.pdw_duty_cicle_actual_value = maxon_velocity_tx_msg.status_word;
+      this->maxon_velocity_tx_pub->publish(ros_msg);
       break;
     }
   }
