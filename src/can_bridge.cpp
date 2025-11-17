@@ -51,6 +51,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->ekf_state_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::ekfStateCallback,this,_1));
   this->ekf_stats_sub = this->create_subscription<lart_msgs::msg::SlamStats>("/SlamStats",10,std::bind(&CanBridge::ekfStatsCallback,this,_1));
   this->control_sub = this->create_subscription<lart_msgs::msg::DynamicsCMD>("/DynamicsCMD",10,std::bind(&CanBridge::ControlCallback,this,_1));
+  this->accelerations_sub = this->create_subscription<lart_msgs::msg::vector3Stamped>("/vector3Stamped",10,std::bind(&CanBridge::accelerationsCallback,this,_1));
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -159,6 +160,11 @@ void CanBridge::ControlCallback(conts lart_msgs::msg::DynamicsCMD::SharedPtr msg
   struct can_frame target_position_frame;
   target_position_frame = positionToMaxonCmd(maxon_offset,msg.steering_angle);
   this->send_can_frame(target_position_frame);
+}
+
+void CanBridge::accelerationsCallback(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg){
+  //to do
+
 }
 
 void CanBridge::handle_can_frame(struct can_frame frame){
