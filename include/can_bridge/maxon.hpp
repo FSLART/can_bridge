@@ -86,7 +86,7 @@ inline struct can_frame setVelocityCmd(){
  /*
   * Before any position command is sent, you need to send the newValueFrame, and wait at least 2ms, then send the positonToMaxonCmd()
  */
-inline struct can_frame positionToMaxonCmd(long home, float angle){
+inline struct can_frame positionToMaxonCmd(long offset, float angle){
     //wheel angle in rad to steering wheel angle
     float sw_angle = -61.6073*pow(angle, 4)+449.05708*pow(angle, 3)+16.71117*pow(angle, 2)+156.50789*angle;
 
@@ -96,7 +96,7 @@ inline struct can_frame positionToMaxonCmd(long home, float angle){
         raw_pos = (raw_pos > 0) ? MAX_ACTUATOR_RELATIVE_POS : -MAX_ACTUATOR_RELATIVE_POS;
     }
 
-    long target_pos = home + raw_pos;
+    long target_pos = offset + raw_pos;
 
     autonomous_temporary_maxon_position_rx_t position_msg;
     position_msg.control_word = 0x3F;

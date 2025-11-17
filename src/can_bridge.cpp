@@ -1,6 +1,8 @@
 #include "can_bridge/can_bridge.hpp"
 using std::placeholders::_1;
 
+bool maxon_offset_defined = false;
+long maxon_offset;
 
 CanBridge::CanBridge() : Node("can_bridge"){
   RCLCPP_INFO(this->get_logger(), "Can Bridge Node has been started");
@@ -144,16 +146,20 @@ void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
   this->send_can_frame(ekf_stats_frame);
 }
 
-//Verificar e acabar!!!!1
+//Verificar e acabar!!!!
 void CanBridge::ControlCallback(conts lart_msgs::msg::DynamicsCMD::SharedPtr msg){
-  //este que tenho de usar ? 
-  autonomous_temporary_dl_msg_1_t control_msg;
+  autonomous_temporary_rpm_target_t control_msg;
   struct can_frame control_frame;
-  control_frame.can_id = canTotalTeste; //to be defined 
+  control_frame.can_id = AUTONOMOUS_TEMPORARY_RPM_TARGET_FRAME_ID; 
   control_frame.can_dlc = 2;
-  this->send_can_frame(control_frame);
-}
+  autonomous_temporary_rpm_target_pack(control_frame.data,&control_msg, sizeof(control_msg));
+  this->send_can_frame(control_frame);  
 
+  //Target Position Frame
+  struct can_frame target_position_frame;
+  target_position_frame = positionToMaxonCmd(maxon_offset,msg.steering_angle);
+  this->send_can_frame(target_position_frame);
+}
 
 void CanBridge::handle_can_frame(struct can_frame frame){
   // Handle the received CAN frame
@@ -285,6 +291,10 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_temporary_maxon_position_tx_t maxon_position_tx_msg;
       autonomous_temporary_maxon_position_tx_unpack(&maxon_position_tx_msg, frame.data, frame.can_dlc);
       this->maxon_position_tx_pub->publish(maxon_position_tx_msg);
+      if(!maxon_offset_defined){
+        maxon_offset = maxon_position_tx_msg.actual_position;
+        maxon_offset_defined = true;
+      }
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_VELOCITY_TX_FRAME_ID:{
