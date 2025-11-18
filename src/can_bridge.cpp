@@ -138,7 +138,7 @@ void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
   if(pack_len < 0){
     RCLCPP_ERROR(this->get_logger(), "Failed to pack EkfStats message: %d", pack_len);
   }
-  ekf_stats_frame.can_id AUTONOMOUS_TEMPORARY_JETSON_DATA_1_FRAME_ID;
+  ekf_stats_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_DATA_1_FRAME_ID;
   ekf_stats_frame.can_dlc = AUTONOMOUS_TEMPORARY_JETSON_DATA_1_LENGTH;
   
   this->send_can_frame(ekf_stats_frame);
@@ -259,10 +259,11 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       ros_msg.susp_l = dyn_front_sig1_msg.susp_l;
       ros_msg.susp_r = dyn_front_sig1_msg.susp_r;
       this->dyn_front_sig1_pub->publish(ros_msg);
-      if(!relative_zero_set && maxon_activated && maxon_initial_position_defined){
+      if(!maxon_offset_defined && maxon_activated && maxon_initial_position_defined){
         int raw_angle_pos = RAD_SW_ANGLE_TO_ACTUATOR_POS(DEG_TO_RAD(dyn_front_sig1_msg.st_angle)); //calculate the position of the maxon in encoder ticks
         maxon_offset = maxon_initial_position + raw_angle_pos; //set the relative zero to the first position of the maxon when the system is turned on
-        relative_zero_set = true;
+        maxon_offset_defined = true;
+      }
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG2_FRAME_ID:{
@@ -375,13 +376,14 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       this->maxon_velocity_tx_pub->publish(ros_msg);
       break;
     }
-    case 0x708:
+    case MAXON_HEARTBEAT_ID:
       if (frame.data[0]==0x05){
           this->maxon_activated = true;
       }
       break;
   }
 }
+
 
 int main(int argc, char ** argv)
 {

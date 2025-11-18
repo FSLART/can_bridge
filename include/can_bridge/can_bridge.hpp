@@ -12,6 +12,7 @@
 #include <thread>
 #include <sstream>
 #include <boost/process.hpp>
+#include <fstream>
 
 #include "lart_msgs/msg/state.hpp"
 #include "lart_msgs/msg/mission.hpp"
@@ -43,6 +44,7 @@
 #include "CAN_DBC/generated/Autonomous_temporary/autonomous_temporary.h"
 #include "maxon.hpp"
 #define CAN_INTERFACE "can0"
+#define MAXON_HEARTBEAT_ID 0x708
 
 namespace bp = boost::process;
 
