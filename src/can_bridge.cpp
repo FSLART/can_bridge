@@ -151,7 +151,7 @@ void CanBridge::ControlCallback(const lart_msgs::msg::DynamicsCMD::SharedPtr msg
   control_frame.can_id = AUTONOMOUS_TEMPORARY_RPM_TARGET_FRAME_ID; 
   control_frame.can_dlc = 2;
   control_msg.rpm_target = msg->rpm;
-  
+
   autonomous_temporary_rpm_target_pack(control_frame.data,&control_msg, sizeof(control_msg));
   this->send_can_frame(control_frame);  
   
@@ -212,8 +212,15 @@ void CanBridge::handle_can_frame(struct can_frame frame){
         // initialize the AS nodes
         send_can_frame(turnOnCANOpenDevicesFrame);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-
-        
+        send_can_frame(enterPreOpModeCmdFrame);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        send_can_frame(opModeCmdFrame);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        send_can_frame(setVelocityCmd());
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        send_can_frame(shutdownCmdFrame);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        send_can_frame(newValueFrame);
       }
       
       if(acu_ign_msg.asms == 1 && acu_ign_msg.ign == 1){
