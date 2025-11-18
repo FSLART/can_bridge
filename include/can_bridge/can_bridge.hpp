@@ -57,7 +57,13 @@ class CanBridge : public rclcpp::Node
 
         bool nodes_initialized = false;
         
-        
+        bool maxon_initial_position_defined = false;
+        bool maxon_activated = false;
+        bool maxon_offset_defined = false;
+
+        long maxon_initial_position;
+        long maxon_offset;
+
         void read_can_frame();
         void send_can_frame(struct can_frame frame);
         void send_can_frames();
@@ -66,9 +72,10 @@ class CanBridge : public rclcpp::Node
         //Callbacks
         void StateCallBack(const lart_msgs::msg::State::SharedPtr msg);
         void ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
-        //include is on state_controler.hpp
         void ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg);
-
+        void ControlCallback(const lart_msgs::msg::DynamicsCMD::SharedPtr msg);
+        void accelerationsCallback(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg);
+ 
     
 
         // Publishers
@@ -96,7 +103,7 @@ class CanBridge : public rclcpp::Node
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr ekf_state_sub; //verificar
         rclcpp::Subscription<lart_msgs::msg::SlamStats>::SharedPtr ekf_stats_sub;
         rclcpp::Subscription<lart_msgs::msg::DynamicsCMD>::SharedPtr control_sub;
-        rclcpp::Subscription<lart_msgs::msg::vector3Stamped>::SharedPtr accelerations_sub;
+        rclcpp::Subscription<geometry_msgs::msg::Vector3Stamped>::SharedPtr accelerations_sub;
 
 };
 #endif // CAN_BRIDGE_HPP

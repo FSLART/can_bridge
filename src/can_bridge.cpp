@@ -1,9 +1,6 @@
 #include "can_bridge/can_bridge.hpp"
 using std::placeholders::_1;
 
-bool maxon_offset_defined = false;
-long maxon_offset;
-
 CanBridge::CanBridge() : Node("can_bridge"){
   RCLCPP_INFO(this->get_logger(), "Can Bridge Node has been started");
 
@@ -51,7 +48,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->ekf_state_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/PoseStamped",10,std::bind(&CanBridge::ekfStateCallback,this,_1));
   this->ekf_stats_sub = this->create_subscription<lart_msgs::msg::SlamStats>("/SlamStats",10,std::bind(&CanBridge::ekfStatsCallback,this,_1));
   this->control_sub = this->create_subscription<lart_msgs::msg::DynamicsCMD>("/DynamicsCMD",10,std::bind(&CanBridge::ControlCallback,this,_1));
-  this->accelerations_sub = this->create_subscription<lart_msgs::msg::vector3Stamped>("/vector3Stamped",10,std::bind(&CanBridge::accelerationsCallback,this,_1));
+  this->accelerations_sub = this->create_subscription<geometry_msgs::msg::Vector3Stamped>("/imu/acceleration",10,std::bind(&CanBridge::accelerationsCallback,this,_1));
 
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -148,17 +145,19 @@ void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
 }
 
 //Verificar e acabar!!!!
-void CanBridge::ControlCallback(conts lart_msgs::msg::DynamicsCMD::SharedPtr msg){
+void CanBridge::ControlCallback(const lart_msgs::msg::DynamicsCMD::SharedPtr msg){
   autonomous_temporary_rpm_target_t control_msg;
   struct can_frame control_frame;
   control_frame.can_id = AUTONOMOUS_TEMPORARY_RPM_TARGET_FRAME_ID; 
   control_frame.can_dlc = 2;
+  control_msg.rpm_target = msg->rpm;
+  
   autonomous_temporary_rpm_target_pack(control_frame.data,&control_msg, sizeof(control_msg));
   this->send_can_frame(control_frame);  
-
+  
   //Target Position Frame
   struct can_frame target_position_frame;
-  target_position_frame = positionToMaxonCmd(maxon_offset,msg.steering_angle);
+  target_position_frame = positionToMaxonCmd(maxon_offset,msg->steering_angle);
   this->send_can_frame(target_position_frame);
 }
 
@@ -211,8 +210,9 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_temporary_acu_ign_unpack(&acu_ign_msg, frame.data, frame.can_dlc);
       if(acu_ign_msg.asms==1 && !this->nodes_initialized){
         // initialize the AS nodes
-        turnOnCANOpenDevicesFrame();
-        std::this_thread::sleep_for(std::chrono::microseconds(200));
+        send_can_frame(turnOnCANOpenDevicesFrame);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
         
       }
       
@@ -252,6 +252,10 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       ros_msg.susp_l = dyn_front_sig1_msg.susp_l;
       ros_msg.susp_r = dyn_front_sig1_msg.susp_r;
       this->dyn_front_sig1_pub->publish(ros_msg);
+      if(!relative_zero_set && maxon_activated && maxon_initial_position_defined){
+        int raw_angle_pos = RAD_SW_ANGLE_TO_ACTUATOR_POS(DEG_TO_RAD(dyn_front_sig1_msg.st_angle)); //calculate the position of the maxon in encoder ticks
+        maxon_offset = maxon_initial_position + raw_angle_pos; //set the relative zero to the first position of the maxon when the system is turned on
+        relative_zero_set = true;
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG2_FRAME_ID:{
@@ -348,9 +352,9 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       ros_msg.actual_position = maxon_position_tx_msg.actual_position;
       ros_msg.actual_torque = maxon_position_tx_msg.actual_torque; 
       this->maxon_position_tx_pub->publish(ros_msg);
-      if(!maxon_offset_defined){
-        maxon_offset = maxon_position_tx_msg.actual_position;
-        maxon_offset_defined = true;
+      if(!maxon_initial_position_defined){
+        maxon_initial_position = maxon_position_tx_msg.actual_position;
+        maxon_initial_position_defined = true;
       }
       break;
     }
@@ -364,6 +368,11 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       this->maxon_velocity_tx_pub->publish(ros_msg);
       break;
     }
+    case 0x708:
+      if (frame.data[0]==0x05){
+          this->maxon_activated = true;
+      }
+      break;
   }
 }
 
