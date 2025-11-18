@@ -201,7 +201,9 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_VCU_RPM_FRAME_ID:{
       autonomous_temporary_vcu_rpm_t vcu_rpm_msg;
       autonomous_temporary_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
-      this->vcu_rpm_pub->publish(vcu_rpm_msg);
+      lart_msgs::msg::VcuRpm ros_msg;
+      ros_msg.rpm_actual = vcu_rpm_msg.rpm_actual;
+      this->vcu_rpm_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_ACU_IGN_FRAME_ID:{
@@ -222,7 +224,11 @@ void CanBridge::handle_can_frame(struct can_frame frame){
     case AUTONOMOUS_TEMPORARY_VCU_HV_FRAME_ID:{
       autonomous_temporary_vcu_hv_t vcu_hv_msg;
       autonomous_temporary_vcu_hv_unpack(&vcu_hv_msg, frame.data, frame.can_dlc);
-      this->vcu_hv_pub->publish(vcu_hv_msg);
+      lart_msgs::msg::VcuHv ros_msg;
+      ros_msg.brake_pressure_front = vcu_hv_msg.brake_pressure_front;
+      ros_msg.brake_pressure_rear =  vcu_hv_msg.brake_pressure_rear;
+      ros_msg.hv = vcu_hv_msg.hv;
+      this->vcu_hv_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_RES_FRAME_ID:{
@@ -238,56 +244,88 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       this->state_pub->publish(state_msg);
       break;
     }
-    //REVER!!!!!!
     case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG1_FRAME_ID:{
       autonomous_temporary_dyn_front_sig1_t dyn_front_sig1_msg;
       autonomous_temporary_dyn_front_sig1_unpack(&dyn_front_sig1_msg, frame.data, frame.can_dlc);
-      lart_msgs::msg::Dynamics dynamics_msg;
-      dynamics_msg.steering_angle = dyn_front_sig1_msg.st_angle;
-            
-      this->dyn_front_sig1_pub->publish(dyn_front_sig1_msg);
+      lart_msgs::msg::DynFrontSig1 ros_msg;
+      ros_msg.st_angle = dyn_front_sig1_msg.st_angle;
+      ros_msg.susp_l = dyn_front_sig1_msg.susp_l;
+      ros_msg.susp_r = dyn_front_sig1_msg.susp_r;
+      this->dyn_front_sig1_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG2_FRAME_ID:{
       autonomous_temporary_dyn_front_sig2_t dyn_front_sig2_msg;
       autonomous_temporary_dyn_front_sig2_unpack(&dyn_front_sig2_msg, frame.data, frame.can_dlc);
-      this->dyn_front_sig2_pub->publish(dyn_front_sig2_msg);
+      lart_msgs::msg::DynFrontSig2 ros_msg;
+      ros_msg.spd_left = dyn_front_sig2_msg.spd_left;
+      ros_msg.spd_right = dyn_front_sig2_msg.spd_right;
+      this->dyn_front_sig2_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG1_FRAME_ID:{
       autonomous_temporary_dyn_front_sig1_t dyn_rear_sig1_msg;
       autonomous_temporary_dyn_front_sig1_unpack(&dyn_rear_sig1_msg, frame.data, frame.can_dlc);
-      this->dyn_rear_sig1_pub->publish(dyn_rear_sig1_msg);
+      lart_msgs::msg::DynRearSig1 ros_msg;
+      ros_msg.st_angle = dyn_rear_sig1_msg.st_angle;
+      ros_msg.susp_l = dyn_rear_sig1_msg.susp_l;
+      ros_msg.susp_r = dyn_rear_sig1_msg.susp_r;
+      this->dyn_rear_sig1_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG2_FRAME_ID:{
       autonomous_temporary_dyn_rear_sig2_t dyn_rear_sig2_msg;
       autonomous_temporary_dyn_rear_sig2_unpack(&dyn_rear_sig2_msg, frame.data, frame.can_dlc);
-      this->dyn_rear_sig2_pub->publish(dyn_rear_sig2_msg);
+      lart_msgs::msg::DynRearSig2 ros_msg;
+      ros_msg.spd_left = dyn_rear_sig2_msg.spd_left;
+      ros_msg.spd_right = dyn_rear_sig2_msg.spd_right;
+      this->dyn_rear_sig2_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_ASF_SIGNALS_FRAME_ID:{
       autonomous_temporary_asf_signals_t asf_signals_msg;
       autonomous_temporary_asf_signals_unpack(&asf_signals_msg, frame.data, frame.can_dlc);
-      this->asf_signals_pub->publish(asf_signals_pub);
+      lart_msgs::msg::AsfSignals ros_msg;
+      ros_msg.brake_pressure_front = asf_signals_msg.brake_pressure_front;
+      ros_msg.brake_pressure_rear = asf_signals_msg.brake_pressure_rear;
+      ros_msg.ebs_pressure_tank_front = asf_signals_msg.ebs_pressure_tank_front;
+      ros_msg.ebs_pressure_tank_rear = asf_signals_msg.ebs_pressure_tank_rear;
+      this->asf_signals_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_VCU_IGN_R2_D_FRAME_ID:{
       autonomous_temporary_vcu_ign_r2_d_t vcu_ign_r2_d_msg;
       autonomous_temporary_vcu_ign_r2_d_unpack(&vcu_ign_r2_d_msg, frame.data, frame.can_dlc);
-      this->vcu_ign_r2_d_pub->publish(vcu_ign_r2_d_msg);
+      lart_msgs::msg::VcuIgnR2d ros_msg;
+      ros_msg.ignition_auto       = vcu_ign_r2_d_msg.ignition_auto;
+      ros_msg.ignition_manual     = vcu_ign_r2_d_msg.ignition_manual;
+      ros_msg.ignition_switch_raw = vcu_ign_r2_d_msg.ignition_switch_raw;
+      ros_msg.r2_d_button_raw     = vcu_ign_r2_d_msg.r2_d_button_raw;
+      ros_msg.r2d_auto            = vcu_ign_r2_d_msg.r2d_auto;
+      ros_msg.r2d_manual          = vcu_ign_r2_d_msg.r2d_manual;
+      ros_msg.shutdown_signal     = vcu_ign_r2_d_msg.shutdown_signal;
+      ros_msg.vcu_state           = vcu_ign_r2_d_msg.vcu_state;
+      this->vcu_ign_r2_d_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_ACU_STATUS_FRAME_ID:{
       autonomous_temporary_acu_status_t acu_status_msg;
       autonomous_temporary_acu_status_unpack(&acu_status_msg, frame.data, frame.can_dlc);
-      this->acu_status_pub->publish(acu_status_msg);
+      lart_msgs::msg::AcuStatus ros_msg;
+      ros_msg.acu_state = acu_status_msg.acu_state;
+      ros_msg.assi_state = acu_status_msg.assi_state;
+      ros_msg.internal_temperature = acu_status_msg.internal_temperature;
+      this->acu_status_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS_TX_FRAME_ID:{
       autonomous_temporary_maxon_status_tx_t maxon_status_tx_msg;
       autonomous_temporary_maxon_status_tx_unpack(&maxon_status_tx_msg, frame.data, frame.can_dlc);
-      this->maxon_status_tx_pub->publish(maxon_status_tx_msg);
+      lart_msgs::msg::MaxonStatusTx ros_msg;
+      ros_msg.control_word = maxon_status_tx_msg.control_word;
+      ros_msg.current_actual_value = maxon_status_tx_msg.current_actual_value;
+      ros_msg.status_word = maxon_status_tx_msg.status_word;
+      this->maxon_status_tx_pub->publish(ros_msg);
       break;
     }
     case AUTONOMOUS_TEMPORARY_MAXON_STATUS2_TX_FRAME_ID:{
