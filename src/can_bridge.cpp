@@ -263,11 +263,12 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       this->dyn_front_sig2_pub->publish(ros_msg);
       break;
     }
+
     case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG1_FRAME_ID:{
       autonomous_temporary_dyn_front_sig1_t dyn_rear_sig1_msg;
       autonomous_temporary_dyn_front_sig1_unpack(&dyn_rear_sig1_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::DynRearSig1 ros_msg;
-      ros_msg.st_angle = dyn_rear_sig1_msg.st_angle;
+      ros_msg.brk_press = dyn_rear_sig1_msg.st_angle; //mostrar isto ao ANDRE!!
       ros_msg.susp_l = dyn_rear_sig1_msg.susp_l;
       ros_msg.susp_r = dyn_rear_sig1_msg.susp_r;
       this->dyn_rear_sig1_pub->publish(ros_msg);
@@ -300,7 +301,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       ros_msg.ignition_auto       = vcu_ign_r2_d_msg.ignition_auto;
       ros_msg.ignition_manual     = vcu_ign_r2_d_msg.ignition_manual;
       ros_msg.ignition_switch_raw = vcu_ign_r2_d_msg.ignition_switch_raw;
-      ros_msg.r2_d_button_raw     = vcu_ign_r2_d_msg.r2_d_button_raw;
+      ros_msg.r2d_button_raw     = vcu_ign_r2_d_msg.r2_d_button_raw;
       ros_msg.r2d_auto            = vcu_ign_r2_d_msg.r2d_auto;
       ros_msg.r2d_manual          = vcu_ign_r2_d_msg.r2d_manual;
       ros_msg.shutdown_signal     = vcu_ign_r2_d_msg.shutdown_signal;
