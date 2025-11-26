@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(lart_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 include_directories(
   include ${CMAKE_SOURCE_DIR}/../lart_common
@@ -20,7 +21,7 @@ add_executable(can_bridge
               )
 
 
-ament_target_dependencies(can_bridge rclcpp std_msgs lart_msgs)
+ament_target_dependencies(can_bridge rclcpp std_msgs lart_msgs std_srvs)
 
 target_include_directories(can_bridge PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -60,8 +60,8 @@ class CanBridge : public rclcpp::Node
         int s; //socket descriptor
         std::mutex socket_mutex;
 
-        rclpp::TimerBase::SharedPtr startRecordingBag_timestamp;
-        rclpp::TimerBase::sharedPtr stopRecordingBag_timestamp;
+        rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr start_recording_bag;
+        rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr stop_recording_bag;
 
         bool nodes_initialized = false;
         bool maxon_initial_position_defined = false;
@@ -87,8 +87,8 @@ class CanBridge : public rclcpp::Node
 
         void service_bag_start();
         void start_recording_request();
-        void handle_start_recording_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future);
-        void hanlde_stop_recording_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future);
+        void handle_start_recording_response(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+        void hanlde_stop_recording_response(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
 
 
         // Publishers
