@@ -25,7 +25,7 @@ ament_target_dependencies(can_bridge rclcpp std_msgs lart_msgs)
 target_include_directories(can_bridge PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(can_bridge PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17sorteio
+target_compile_features(can_bridge PUBLIC c_std_99 cxx_std_20)  # Require C99 and C++17sorteio
 
 
 install(TARGETS can_bridge

@@ -144,7 +144,6 @@ void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
   this->send_can_frame(ekf_stats_frame);
 }
 
-//Verificar e acabar!!!!
 void CanBridge::ControlCallback(const lart_msgs::msg::DynamicsCMD::SharedPtr msg){
   autonomous_temporary_rpm_target_t control_msg;
   struct can_frame control_frame;
@@ -162,8 +161,47 @@ void CanBridge::ControlCallback(const lart_msgs::msg::DynamicsCMD::SharedPtr msg
 }
 
 void CanBridge::accelerationsCallback(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg){
-  //to do
+  (void)msg;
+}
 
+void CanBridge::serviceClientBag()
+{
+  if (!is_unit_test ){          
+    // mudar de nomes das variaveis e verificar os tipos
+    this->startRecordingBag_timestamp = this->create_client<lart_msgs::srv::trigger>("startrecordingbag/trigger");
+
+    while (!this->startRecordingBag_timestamp->wait_for_service(std::chrono::seconds(1))) {
+        if (!rclcpp::ok()) {
+            RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for startrecordingbag/trigger service.");
+            return;
+        }
+        RCLCPP_INFO(this->get_logger(), "Waiting for startrecordingbag/trigger service...");
+    }
+
+    this->stopRecordingBag_timestamp = this->create_client<lart_msgs::srv::trigger>("stoprecordingbag/trigger");
+  
+    while (!this->stopRecordingBag_timestamp->wait_for_service(std::chrono::seconds(1))) {
+      if (!rclcpp::ok()) {
+          RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for stoprecordingbag/trigger service.");
+          return;
+      }
+      RCLCPP_INFO(this->get_logger(), "Waiting for stoprecordingbag/trigger service...");
+    }
+  }
+}
+
+//composable pos node 
+void CanBridge::start_recording_request()
+{
+  auto resquest = std::make_shared<lart_msgs::srv::trigger::Request>
+  auto future = this->startRecordingBag_timestamp->async_send_request(
+    request,
+    std::bind(&CanBridge::handle_steering_timestamp_response, this, _1));
+}
+
+void CanBridge::handle_start_recording_timestamp_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future)
+{
+  (void)future;
 }
 
 void CanBridge::handle_can_frame(struct can_frame frame){
@@ -216,15 +254,16 @@ void CanBridge::handle_can_frame(struct can_frame frame){
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
         send_can_frame(opModeCmdFrame);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        send_can_frame(setVelocityCmd());
+        send_can_frame(setVelocityCmd());                         
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
         send_can_frame(shutdownCmdFrame);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        send_can_frame(newValueFrame);
+        send_can_frame(newValueFrame);                            
       }
       
       if(acu_ign_msg.asms == 1 && acu_ign_msg.ign == 1){
         //Start recording bag -> send service call to the bag recorder composable node
+        startRecordingBag(); 
       }
       break;
     }

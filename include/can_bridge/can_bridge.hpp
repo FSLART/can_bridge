@@ -34,6 +34,8 @@
 #include "lart_msgs/msg/maxon_status2_tx.hpp"
 #include "lart_msgs/msg/maxon_position_tx.hpp"
 #include "lart_msgs/msg/maxon_velocity_tx.hpp"
+//tá a dar erro 
+#include "std_srvs/srv/trigger.hpp"
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
@@ -43,6 +45,7 @@
 
 #include "CAN_DBC/generated/Autonomous_temporary/autonomous_temporary.h"
 #include "maxon.hpp"
+
 #define CAN_INTERFACE "can0"
 #define MAXON_HEARTBEAT_ID 0x708
 
@@ -57,14 +60,18 @@ class CanBridge : public rclcpp::Node
         int s; //socket descriptor
         std::mutex socket_mutex;
 
+        rclpp::TimerBase::SharedPtr startRecordingBag_timestamp;
+        rclpp::TimerBase::sharedPtr stopRecordingBag_timestamp;
+
         bool nodes_initialized = false;
-        
         bool maxon_initial_position_defined = false;
         bool maxon_activated = false;
         bool maxon_offset_defined = false;
+        bool recordBag_service_activated = false;
 
         long maxon_initial_position;
         long maxon_offset;
+
 
         void read_can_frame();
         void send_can_frame(struct can_frame frame);
@@ -77,8 +84,11 @@ class CanBridge : public rclcpp::Node
         void ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg);
         void ControlCallback(const lart_msgs::msg::DynamicsCMD::SharedPtr msg);
         void accelerationsCallback(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg);
- 
-    
+
+        void serviceClientBag();
+        void start_recording_request();
+        void handle_start_recording_timestamp_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future);
+
 
         // Publishers
         rclcpp::Publisher<lart_msgs::msg::State>::SharedPtr state_pub;
