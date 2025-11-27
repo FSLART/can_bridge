@@ -164,7 +164,7 @@ void CanBridge::accelerationsCallback(const geometry_msgs::msg::Vector3Stamped::
   (void)msg;
 }
 
-void CanBridge::serviceClientBag()
+void CanBridge::service_bag_start()
 {
   if (!is_unit_test ){          
     // mudar de nomes das variaveis e verificar os tipos
@@ -193,15 +193,42 @@ void CanBridge::serviceClientBag()
 //composable pos node 
 void CanBridge::start_recording_request()
 {
-  auto resquest = std::make_shared<lart_msgs::srv::trigger::Request>
-  auto future = this->startRecordingBag_timestamp->async_send_request(
+  auto request = std::make_shared<lart_msgs::srv::trigger::Request>();
+  auto future = this->start_recording_bag->async_send_request(
     request,
-    std::bind(&CanBridge::handle_steering_timestamp_response, this, _1));
+    std::bind(&CanBridge::handle_start_recording_response, this, _1));
 }
 
-void CanBridge::handle_start_recording_timestamp_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future)
+void CanBridge::handle_start_recording_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future)
 {
-  (void)future;
+  //Perguntar se o start recording envia alguma msg ou se apenas começa a gravar 
+  try{
+    auto response = future.get();  
+  }
+  catch(const std::exception &e)
+  {
+    RCLCPP_ERROR(this->get_logger(),"Service call failed: %s",e.what());
+  }
+  
+}
+
+void CanBridge::handle_stop_recording_request()
+{
+  auto request = std::make_shared<lart_msg::srv::trigger::Request>();
+  auto future = this->stop_recording_bag->async_send_request(
+    request,
+    std::bind(&CanBridge::hanlde_stop_recording_response,this,_1));
+}
+
+void CanBridge::hanlde_stop_recording_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future)
+{
+  try{
+    auto response = future.get();  
+  }
+  catch(const std::exception &e)
+  {
+    RCLCPP_ERROR(this->get_logger(),"Service call failed: %s",e.what());
+  }
 }
 
 void CanBridge::handle_can_frame(struct can_frame frame){
@@ -263,7 +290,8 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       
       if(acu_ign_msg.asms == 1 && acu_ign_msg.ign == 1){
         //Start recording bag -> send service call to the bag recorder composable node
-        startRecordingBag(); 
+        service_bag_start();
+        start_recording_request();
       }
       break;
     }

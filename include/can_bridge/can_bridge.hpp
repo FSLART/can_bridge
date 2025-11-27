@@ -85,9 +85,10 @@ class CanBridge : public rclcpp::Node
         void ControlCallback(const lart_msgs::msg::DynamicsCMD::SharedPtr msg);
         void accelerationsCallback(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg);
 
-        void serviceClientBag();
+        void service_bag_start();
         void start_recording_request();
-        void handle_start_recording_timestamp_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future);
+        void handle_start_recording_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future);
+        void hanlde_stop_recording_response(rclcpp::Client<lart_msgs::srv::trigger>::SharedFuture future);
 
 
         // Publishers
