@@ -193,10 +193,10 @@ void CanBridge::service_bag_start()
     {
       if (!rclcpp::ok())
       {
-        RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for startrecordingbag/trigger service.");
+        RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for /start_recording service.");
         return;
       }
-      RCLCPP_INFO(this->get_logger(), "Waiting for startrecordingbag/trigger service...");
+      RCLCPP_INFO(this->get_logger(), "Waiting for /start_recording service...");
     }
 
     this->stop_recording_bag = this->create_client<std_srvs::srv::Trigger>("/stop_recording"); // Check this message
@@ -205,10 +205,10 @@ void CanBridge::service_bag_start()
     {
       if (!rclcpp::ok())
       {
-        RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for stoprecordingbag/trigger service.");
+        RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for /stop_recording.");
         return;
       }
-      RCLCPP_INFO(this->get_logger(), "Waiting for stoprecordingbag/trigger service...");
+      RCLCPP_INFO(this->get_logger(), "Waiting for /stop_recording...");
     }
   }
 }
