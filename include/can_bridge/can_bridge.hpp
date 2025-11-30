@@ -87,6 +87,7 @@ class CanBridge : public rclcpp::Node
 
         void service_bag_start();
         void start_recording_request();
+        void stop_recording_request();
         void handle_start_recording_response(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
         void hanlde_stop_recording_response(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
 

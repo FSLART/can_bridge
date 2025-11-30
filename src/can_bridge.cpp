@@ -217,7 +217,7 @@ void CanBridge::service_bag_start()
 void CanBridge::start_recording_request()
 {
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  auto future = this->start_recording_request->async_send_request(
+  auto future = this->start_recording_bag->async_send_request(
       request,
       std::bind(&CanBridge::handle_start_recording_response, this, _1));
 }
@@ -235,10 +235,10 @@ void CanBridge::handle_start_recording_response(rclcpp::Client<std_srvs::srv::Tr
   }
 }
 
-void CanBridge::hanlde_stop_recording_response(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
+void CanBridge::stop_recording_request()
 {
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  auto future = this->stop_recording_bag->async_send_request(
+  auto response = this->stop_recording_bag->async_send_request(
       request,
       std::bind(&CanBridge::hanlde_stop_recording_response, this, _1));
 }
