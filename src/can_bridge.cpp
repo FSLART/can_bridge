@@ -295,6 +295,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_vcu_rpm_t vcu_rpm_msg;
     autonomous_temporary_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::VcuRpm ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.rpm_actual = vcu_rpm_msg.rpm_actual;
     this->vcu_rpm_pub->publish(ros_msg);
     break;
@@ -303,6 +304,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
   {
     autonomous_temporary_acu_ign_t acu_ign_msg;
     autonomous_temporary_acu_ign_unpack(&acu_ign_msg, frame.data, frame.can_dlc);
+    acu_ign_msg.header.stamp = this->now();
     if (acu_ign_msg.asms == 1 && !this->nodes_initialized)
     {
       // initialize the AS nodes
@@ -332,6 +334,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_vcu_hv_t vcu_hv_msg;
     autonomous_temporary_vcu_hv_unpack(&vcu_hv_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::VcuHv ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.brake_pressure_front = vcu_hv_msg.brake_pressure_front;
     ros_msg.brake_pressure_rear = vcu_hv_msg.brake_pressure_rear;
     ros_msg.hv = vcu_hv_msg.hv;
@@ -360,6 +363,8 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_dyn_front_sig1_t dyn_front_sig1_msg;
     autonomous_temporary_dyn_front_sig1_unpack(&dyn_front_sig1_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::DynFrontSig1 ros_msg;
+    ros_msg.header.stamp = this->now();
+
     ros_msg.st_angle = dyn_front_sig1_msg.st_angle;
     ros_msg.susp_l = dyn_front_sig1_msg.susp_l;
     ros_msg.susp_r = dyn_front_sig1_msg.susp_r;
@@ -377,6 +382,8 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_dyn_front_sig2_t dyn_front_sig2_msg;
     autonomous_temporary_dyn_front_sig2_unpack(&dyn_front_sig2_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::DynFrontSig2 ros_msg;
+
+    ros_msg.header.stamp = this->now();
     ros_msg.spd_left = dyn_front_sig2_msg.spd_left;
     ros_msg.spd_right = dyn_front_sig2_msg.spd_right;
     this->dyn_front_sig2_pub->publish(ros_msg);
@@ -388,6 +395,8 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_dyn_front_sig1_t dyn_rear_sig1_msg;
     autonomous_temporary_dyn_front_sig1_unpack(&dyn_rear_sig1_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::DynRearSig1 ros_msg;
+
+    ros_msg.header.stamp = this->now();
     ros_msg.brk_press = dyn_rear_sig1_msg.st_angle; // mostrar isto ao ANDRE!!
     ros_msg.susp_l = dyn_rear_sig1_msg.susp_l;
     ros_msg.susp_r = dyn_rear_sig1_msg.susp_r;
@@ -399,6 +408,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_dyn_rear_sig2_t dyn_rear_sig2_msg;
     autonomous_temporary_dyn_rear_sig2_unpack(&dyn_rear_sig2_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::DynRearSig2 ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.spd_left = dyn_rear_sig2_msg.spd_left;
     ros_msg.spd_right = dyn_rear_sig2_msg.spd_right;
     this->dyn_rear_sig2_pub->publish(ros_msg);
@@ -409,6 +419,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_asf_signals_t asf_signals_msg;
     autonomous_temporary_asf_signals_unpack(&asf_signals_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::AsfSignals ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.brake_pressure_front = asf_signals_msg.brake_pressure_front;
     ros_msg.brake_pressure_rear = asf_signals_msg.brake_pressure_rear;
     ros_msg.ebs_pressure_tank_front = asf_signals_msg.ebs_pressure_tank_front;
@@ -421,6 +432,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_vcu_ign_r2_d_t vcu_ign_r2_d_msg;
     autonomous_temporary_vcu_ign_r2_d_unpack(&vcu_ign_r2_d_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::VcuIgnR2d ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.ignition_auto = vcu_ign_r2_d_msg.ignition_auto;
     ros_msg.ignition_manual = vcu_ign_r2_d_msg.ignition_manual;
     ros_msg.ignition_switch_raw = vcu_ign_r2_d_msg.ignition_switch_raw;
@@ -437,6 +449,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_acu_status_t acu_status_msg;
     autonomous_temporary_acu_status_unpack(&acu_status_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::AcuStatus ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.acu_state = acu_status_msg.acu_state;
     ros_msg.assi_state = acu_status_msg.assi_state;
     ros_msg.internal_temperature = acu_status_msg.internal_temperature;
@@ -448,6 +461,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_maxon_status_tx_t maxon_status_tx_msg;
     autonomous_temporary_maxon_status_tx_unpack(&maxon_status_tx_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::MaxonStatusTx ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.control_word = maxon_status_tx_msg.control_word;
     ros_msg.current_actual_value = maxon_status_tx_msg.current_actual_value;
     ros_msg.status_word = maxon_status_tx_msg.status_word;
@@ -459,6 +473,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_maxon_status2_tx_t maxon_status2_tx_msg;
     autonomous_temporary_maxon_status2_tx_unpack(&maxon_status2_tx_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::MaxonStatus2Tx ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.error_code = maxon_status2_tx_msg.error_code;
     ros_msg.status_word = maxon_status2_tx_msg.status_word;
     ros_msg.current_average_value = maxon_status2_tx_msg.current_average_value;
@@ -471,6 +486,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_maxon_position_tx_t maxon_position_tx_msg;
     autonomous_temporary_maxon_position_tx_unpack(&maxon_position_tx_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::MaxonPositionTx ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.status_word = maxon_position_tx_msg.status_word;
     ros_msg.actual_position = maxon_position_tx_msg.actual_position;
     ros_msg.actual_torque = maxon_position_tx_msg.actual_torque;
@@ -487,6 +503,7 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     autonomous_temporary_maxon_velocity_tx_t maxon_velocity_tx_msg;
     autonomous_temporary_maxon_velocity_tx_unpack(&maxon_velocity_tx_msg, frame.data, frame.can_dlc);
     lart_msgs::msg::MaxonVelocityTx ros_msg;
+    ros_msg.header.stamp = this->now();
     ros_msg.status_word = maxon_velocity_tx_msg.status_word;
     ros_msg.actual_velocity = maxon_velocity_tx_msg.actual_velocity;
     ros_msg.pdw_duty_cicle_actual_value = maxon_velocity_tx_msg.status_word;
