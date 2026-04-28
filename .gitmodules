@@ -1,3 +1,3 @@
-[submodule "include/CAN_DBC"]
-	path = include/CAN_DBC
-	url = https://github.com/FSLART/CAN_DBC.git
+[submodule "include/T26_DBC"]
+	path = include/T26_DBC
+	url = https://github.com/FSLART/T26_DBC.git
