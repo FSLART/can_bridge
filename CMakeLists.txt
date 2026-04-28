@@ -13,7 +13,7 @@ find_package(lart_msgs REQUIRED)
 
 add_executable(can_bridge 
                 src/can_bridge.cpp
-                include/CAN_DBC/generated/Autonomous_temporary/autonomous_temporary.c
+                include/T26_DBC/generated/autonomous_t26/autonomous_t26.c
               )
 
 
