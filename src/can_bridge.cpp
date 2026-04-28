@@ -33,10 +33,10 @@ CanBridge::CanBridge() : Node("can_bridge")
   this->dynamics_pub = this->create_publisher<lart_msgs::msg::Dynamics>("/dynamics", 10);
   this->vcu_rpm_pub = this->create_publisher<lart_msgs::msg::VcuRpm>("/vcu_rpm", 10);
   this->vcu_hv_pub = this->create_publisher<lart_msgs::msg::VcuHv>("/vcuHv", 10);
-  this->dyn_front_sig1_pub = this->create_publisher<lart_msgs::msg::DynFrontSig1>("/dynfrontsig1", 10);
-  this->dyn_front_sig2_pub = this->create_publisher<lart_msgs::msg::DynFrontSig2>("/dynfrontsig2", 10);
-  this->dyn_rear_sig1_pub = this->create_publisher<lart_msgs::msg::DynRearSig1>("/dynrearsig1", 10);
-  this->dyn_rear_sig2_pub = this->create_publisher<lart_msgs::msg::DynRearSig2>("/dynrearsig2", 10);
+  this->dyn_front_sig1_pub = this->create_publisher<lart_msgs::msg::DynFrontSig1>("/dynfrontsig1", 10); //st angle, suspensions
+  this->dyn_front_sig2_pub = this->create_publisher<lart_msgs::msg::DynFrontSig2>("/dynfrontsig2", 10); //wheel speeds
+  this->dyn_rear_sig1_pub = this->create_publisher<lart_msgs::msg::DynRearSig1>("/dynrearsig1", 10); // brake pressures, suspensions
+  this->dyn_rear_sig2_pub = this->create_publisher<lart_msgs::msg::DynRearSig2>("/dynrearsig2", 10); //wheel speeds
   this->asf_signals_pub = this->create_publisher<lart_msgs::msg::AsfSignals>("/asfsignals", 10);
   this->vcu_ign_r2_d_pub = this->create_publisher<lart_msgs::msg::VcuIgnR2d>("/vcuignr2d", 10);
   this->acu_status_pub = this->create_publisher<lart_msgs::msg::AcuStatus>("/acustatus", 10);
@@ -282,12 +282,6 @@ void CanBridge::handle_can_frame(struct can_frame frame)
     jetson_ms_frame.can_dlc = static_cast<uint8_t>(pack_len);
     this->send_can_frame(jetson_ms_frame);
 
-    /* EXAMPLE USAGE OF THE ROS MESSAGES GENERATED FROM THE CAN DBC
-    lart_msgs::msg::AcuMs acu_ms_ros_msg;
-    acu_ms_ros_msg.header.stamp = this->now();
-    acu_ms_ros_msg.mission_select = acu_ms_msg.mission_select;
-    */
-
     break;
   }
   case AUTONOMOUS_TEMPORARY_VCU_RPM_FRAME_ID:
@@ -304,7 +298,6 @@ void CanBridge::handle_can_frame(struct can_frame frame)
   {
     autonomous_temporary_acu_ign_t acu_ign_msg;
     autonomous_temporary_acu_ign_unpack(&acu_ign_msg, frame.data, frame.can_dlc);
-    acu_ign_msg.header.stamp = this->now();
     if (acu_ign_msg.asms == 1 && !this->nodes_initialized)
     {
       // initialize the AS nodes
