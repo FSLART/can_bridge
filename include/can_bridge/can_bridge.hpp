@@ -11,7 +11,8 @@
 #include <errno.h>
 #include <thread>
 #include <sstream>
-#include <boost/process.hpp>
+#include <net/if.h>
+#include <sys/ioctl.h>
 
 #include "lart_msgs/msg/dv_dynamics1.hpp"
 #include "lart_msgs/msg/dv_dynamics2.hpp"
@@ -37,7 +38,6 @@
 
 #define CAN_INTERFACE "can0"
 
-namespace bp = boost::process;
 
 class CanBridge : public rclcpp::Node
 {
@@ -47,8 +47,6 @@ class CanBridge : public rclcpp::Node
     private:
         int s; //socket descriptor
         std::mutex socket_mutex;
-
-        bool nodes_initialized = false;
         
         
         void read_can_frame();
