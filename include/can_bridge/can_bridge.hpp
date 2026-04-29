@@ -78,6 +78,8 @@ class CanBridge : public rclcpp::Node
             // RES
         rclcpp::Publisher<lart_msgs::msg::Res>::SharedPtr res_pub_;
 
+            // Handbook signals
+        rclcpp::Publisher<lart_msgs::msg::AsfSignals>::SharedPtr asf_signals_pub_;
 
         // Subscribers
 
@@ -89,7 +91,6 @@ class CanBridge : public rclcpp::Node
         rclcpp::Subscription<lart_msgs::msg::CubemarsPossitionLoop>::SharedPtr cubemars_possition_loop_sub_;
 
             // Handbook signals
-        rclcpp::Subscription<lart_msgs::msg::AsfSignals>::SharedPtr asf_signals_sub_;
         rclcpp::Subscription<lart_msgs::msg::DvDynamics1>::SharedPtr dv_dynamics1_sub_;
         rclcpp::Subscription<lart_msgs::msg::DvDynamics2>::SharedPtr dv_dynamics2_sub_;
         rclcpp::Subscription<lart_msgs::msg::DvStatus>::SharedPtr dv_status_sub_;
@@ -103,7 +104,6 @@ class CanBridge : public rclcpp::Node
         
         void handle_cubemars_possition_loop_message(const lart_msgs::msg::CubemarsPossitionLoop::SharedPtr msg);
 
-        void handle_asf_signals_message(const lart_msgs::msg::AsfSignals::SharedPtr msg);
         void handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::SharedPtr msg);
         void handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::SharedPtr msg);
         void handle_dv_status_message(const lart_msgs::msg::DvStatus::SharedPtr msg);

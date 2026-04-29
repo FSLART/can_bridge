@@ -44,8 +44,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->dv_dynamics1_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics1>("/dv/dynamics1", 10, std::bind(&CanBridge::handle_dv_dynamics1_message, this, _1));
   this->dv_dynamics2_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics2>("/dv/dynamics2", 10, std::bind(&CanBridge::handle_dv_dynamics2_message, this, _1));
   this->dv_status_sub_ = this->create_subscription<lart_msgs::msg::DvStatus>("/dv/status", 10, std::bind(&CanBridge::handle_dv_status_message, this, _1));
-  this->asf_signals_sub_ = this->create_subscription<lart_msgs::msg::AsfSignals>("/asf/signals", 10, std::bind(&CanBridge::handle_asf_signals_message, this, _1));
-  
+
   this->jetson_sub_ = this->create_subscription<lart_msgs::msg::Jetson>("/jetson", 10, std::bind(&CanBridge::handle_jetson_message, this, _1));
   
   this->cubemars_possition_loop_sub_ = this->create_subscription<lart_msgs::msg::CubemarsPossitionLoop>("/cubemars/possition_loop", 10, std::bind(&CanBridge::handle_cubemars_possition_loop_message, this, _1));
@@ -259,12 +258,26 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       this->res_pub_->publish(res_ros_msg);
       break;
     }
+
+    case AUTONOMOUS_T26_ASF_SIGNALS_FRAME_ID:{
+      autonomous_t26_asf_signals_t asf_signals_msg;
+      autonomous_t26_asf_signals_unpack(&asf_signals_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::AsfSignals asf_signals_ros_msg;
+      asf_signals_ros_msg.header.stamp = this->now();
+      asf_signals_ros_msg.ebs_pressure_tank_front = asf_signals_msg.ebs_pressure_tank_front;
+      asf_signals_ros_msg.ebs_pressure_tank_rear = asf_signals_msg.ebs_pressure_tank_rear;
+      asf_signals_ros_msg.brake_pressure_front = asf_signals_msg.brake_pressure_front;
+      asf_signals_ros_msg.brake_pressure_rear = asf_signals_msg.brake_pressure_rear;
+      this->asf_signals_pub_->publish(asf_signals_ros_msg);
+      break;
+    }
   }
 }
 
 void CanBridge::handle_vcu_torque_target_message(const lart_msgs::msg::VcuTorqueTarget::SharedPtr msg){
   autonomous_t26_vcu_torque_target_t vcu_torque_target_msg;
   vcu_torque_target_msg.torque_target = msg->torque_target;
+
   struct can_frame vcu_torque_target_frame;
   int pack_len = autonomous_t26_vcu_torque_target_pack(
       vcu_torque_target_frame.data,
@@ -282,6 +295,7 @@ void CanBridge::handle_vcu_torque_target_message(const lart_msgs::msg::VcuTorque
 void CanBridge::handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget::SharedPtr msg){
   autonomous_t26_vcu_rpm_target_t vcu_rpm_target_msg;
   vcu_rpm_target_msg.rpm_target = msg->rpm_target;
+
   struct can_frame vcu_rpm_target_frame;
   int pack_len = autonomous_t26_vcu_rpm_target_pack(
       vcu_rpm_target_frame.data,
@@ -299,6 +313,7 @@ void CanBridge::handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget
 void CanBridge::handle_cubemars_possition_loop_message(const lart_msgs::msg::CubemarsPossitionLoop::SharedPtr msg){
   autonomous_t26_cube_mars_possition_loop_t cubemars_possition_loop_msg;
   cubemars_possition_loop_msg.position = msg->position;
+
   struct can_frame cubemars_possition_loop_frame;
   int pack_len = autonomous_t26_cube_mars_possition_loop_pack(
       cubemars_possition_loop_frame.data,
@@ -314,23 +329,95 @@ void CanBridge::handle_cubemars_possition_loop_message(const lart_msgs::msg::Cub
 }
 
 void CanBridge::handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::SharedPtr msg){
-  // Handle dv_dynamics1 message and send corresponding CAN frame
+  autonomous_t26_dv_dynamics_1_t dv_dynamics1_msg;
+  dv_dynamics1_msg.speed_actual = msg->speed_actual;
+  dv_dynamics1_msg.speed_target = msg->speed_target;
+  dv_dynamics1_msg.steering_angle_actual = msg->steering_angle_actual;
+  dv_dynamics1_msg.steering_angle_target = msg->steering_angle_target;
+  dv_dynamics1_msg.brake_hydr_actual = msg->brake_hydr_actual;
+  dv_dynamics1_msg.brake_hydr_target = msg->brake_hydr_target;
+  dv_dynamics1_msg.motor_moment_actual = msg->motor_moment_actual;
+  dv_dynamics1_msg.motor_moment_target = msg->motor_moment_target;
+
+  struct can_frame dv_dynamics1_frame;
+  int pack_len = autonomous_t26_dv_dynamics_1_pack(
+      dv_dynamics1_frame.data,
+      &dv_dynamics1_msg,
+      sizeof(dv_dynamics1_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack dv_dynamics1 message: %d", pack_len);
+      return;
+  }
+  dv_dynamics1_frame.can_id  = AUTONOMOUS_T26_DV_DYNAMICS_1_FRAME_ID;
+  dv_dynamics1_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(dv_dynamics1_frame);
 }
 
 void CanBridge::handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::SharedPtr msg){
-  // Handle dv_dynamics2 message and send corresponding CAN frame
+  autonomous_t26_dv_dynamics_2_t dv_dynamics2_msg;
+  dv_dynamics2_msg.acceleration_longitudinal = msg->acceleration_longitudinal;
+  dv_dynamics2_msg.acceleration_lateral = msg->acceleration_lateral;
+  dv_dynamics2_msg.yaw_rate = msg->yaw_rate;
+
+  struct can_frame dv_dynamics2_frame;
+  int pack_len = autonomous_t26_dv_dynamics_2_pack(
+      dv_dynamics2_frame.data,
+      &dv_dynamics2_msg,
+      sizeof(dv_dynamics2_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack dv_dynamics2 message: %d", pack_len);
+      return;
+  }
+  dv_dynamics2_frame.can_id  = AUTONOMOUS_T26_DV_DYNAMICS_2_FRAME_ID;
+  dv_dynamics2_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(dv_dynamics2_frame);
 }
 
 void CanBridge::handle_dv_status_message(const lart_msgs::msg::DvStatus::SharedPtr msg){
-  // Handle dv_status message and send corresponding CAN frame
-}
+  autonomous_t26_dv_status_t dv_status_msg;
+  dv_status_msg.as_status = msg->as_status;
+  dv_status_msg.asb_ebs_state = msg->asb_ebs_state;
+  dv_status_msg.ami_state = msg->ami_state;
+  dv_status_msg.steering_state = msg->steering_state;
+  dv_status_msg.asb_redundancy_state = msg->asb_redundancy_state;
+  dv_status_msg.lap_counter = msg->lap_counter;
+  dv_status_msg.cones_count_actual = msg->cones_count_actual;
+  dv_status_msg.cones_count_all = msg->cones_count_all;
 
-void CanBridge::handle_asf_signals_message(const lart_msgs::msg::AsfSignals::SharedPtr msg){
-  // Handle asf_signals message and send corresponding CAN frame
+  struct can_frame dv_status_frame;
+  int pack_len = autonomous_t26_dv_status_pack(
+      dv_status_frame.data,
+      &dv_status_msg,
+      sizeof(dv_status_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack dv_status message: %d", pack_len);
+      return;
+  }
+  dv_status_frame.can_id  = AUTONOMOUS_T26_DV_STATUS_FRAME_ID;
+  dv_status_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(dv_status_frame);
 }
 
 void CanBridge::handle_jetson_message(const lart_msgs::msg::Jetson::SharedPtr msg){
-  // Handle jetson message and send corresponding CAN frame
+  autonomous_t26_jetson_t jetson_msg;
+  jetson_msg.as_state = msg->as_state;
+  jetson_msg.as_mission = msg->as_mission;
+  jetson_msg.temperature = msg->temperature;
+  jetson_msg.cpu = msg->cpu;
+  jetson_msg.gpu = msg->gpu;
+
+  struct can_frame jetson_frame;
+  int pack_len = autonomous_t26_jetson_pack(
+      jetson_frame.data,
+      &jetson_msg,
+      sizeof(jetson_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack jetson message: %d", pack_len);
+      return;
+  }
+  jetson_frame.can_id  = AUTONOMOUS_T26_JETSON_FRAME_ID;
+  jetson_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(jetson_frame);
 }
 
 int main(int argc, char ** argv)
