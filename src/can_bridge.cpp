@@ -51,6 +51,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
 
   this->vcu_torque_target_sub_ = this->create_subscription<lart_msgs::msg::VcuTorqueTarget>("/vcu/torque_target", 10, std::bind(&CanBridge::handle_vcu_torque_target_message, this, _1));
   this->vcu_rpm_target_sub_ = this->create_subscription<lart_msgs::msg::VcuRpmTarget>("/vcu/rpm_target", 10, std::bind(&CanBridge::handle_vcu_rpm_target_message, this, _1));
+  
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
   read_can_thread.detach();
@@ -78,36 +79,8 @@ void CanBridge::send_can_frame(struct can_frame frame){
 
 void CanBridge::handle_can_frame(struct can_frame frame){
   // Handle the received CAN frame
-  RCLCPP_INFO(this->get_logger(), "Received CAN frame with ID: 0x%X", frame.can_id);
-  // Add your handling logic here
+  // RCLCPP_INFO(this->get_logger(), "Received CAN frame with ID: 0x%X", frame.can_id);
   switch(frame.can_id){
-    // case AUTONOMOUS_TEMPORARY_ACU_MS_FRAME_ID:{
-    //   autonomous_temporary_acu_ms_t acu_ms_msg;
-    //   autonomous_temporary_acu_ms_unpack(&acu_ms_msg, frame.data, frame.can_dlc);
-    //   autonomous_temporary_jetson_ms_t jetson_ms_msg;
-    //   jetson_ms_msg.mission_select = acu_ms_msg.mission_select;
-    //   struct can_frame jetson_ms_frame;
-    //   this->send_can_frame(jetson_ms_frame);
-    //   int pack_len = autonomous_temporary_jetson_ms_pack(
-    //       jetson_ms_frame.data,
-    //       &jetson_ms_msg,
-    //       sizeof(jetson_ms_frame.data));
-    //   if (pack_len < 0) {
-    //       RCLCPP_ERROR(this->get_logger(), "Failed to pack jetson_ms message: %d", pack_len);
-    //       break;
-    //   }
-    //   jetson_ms_frame.can_id  = AUTONOMOUS_TEMPORARY_JETSON_MS_FRAME_ID;
-    //   jetson_ms_frame.can_dlc = static_cast<uint8_t>(pack_len);
-    //   this->send_can_frame(jetson_ms_frame);
-
-    //   /* EXAMPLE USAGE OF THE ROS MESSAGES GENERATED FROM THE CAN DBC
-    //   lart_msgs::msg::AcuMs acu_ms_ros_msg;
-    //   acu_ms_ros_msg.header.stamp = this->now();
-    //   acu_ms_ros_msg.mission_select = acu_ms_msg.mission_select;
-    //   */
-
-    //   break;
-    // }
     // case AUTONOMOUS_TEMPORARY_RES_FRAME_ID:{
     //   autonomous_temporary_res_t res_msg;
     //   autonomous_temporary_res_unpack(&res_msg, frame.data, frame.can_dlc);
