@@ -32,7 +32,7 @@
 #include "lart_msgs/msg/aqt7.hpp"
 #include "lart_msgs/msg/asf_signals.hpp"
 #include "lart_msgs/msg/cubemars_feedback.hpp"
-#include "lart_msgs/msg/cubemars_possition_loop.hpp"
+#include "lart_msgs/msg/cubemars_position_loop.hpp"
 
 #include "T26_DBC/generated/autonomous_t26/autonomous_t26.h"
 
@@ -48,15 +48,13 @@ class CanBridge : public rclcpp::Node
         int s; //socket descriptor
         std::mutex socket_mutex;
         
-        
         void read_can_frame();
         void send_can_frame(struct can_frame frame);
         void send_can_frames();
         void handle_can_frame(struct can_frame frame);
-        
 
         // Publishers
-
+        
             //aquisitions
         rclcpp::Publisher<lart_msgs::msg::Aqt1>::SharedPtr aquisition1_pub_;
         rclcpp::Publisher<lart_msgs::msg::Aqt2>::SharedPtr aquisition2_pub_;
@@ -88,7 +86,7 @@ class CanBridge : public rclcpp::Node
         rclcpp::Subscription<lart_msgs::msg::VcuTorqueTarget>::SharedPtr vcu_torque_target_sub_;
 
             //Cubemars
-        rclcpp::Subscription<lart_msgs::msg::CubemarsPossitionLoop>::SharedPtr cubemars_possition_loop_sub_;
+        rclcpp::Subscription<lart_msgs::msg::CubemarsPositionLoop>::SharedPtr cubemars_position_loop_sub_;
 
             // Handbook signals
         rclcpp::Subscription<lart_msgs::msg::DvDynamics1>::SharedPtr dv_dynamics1_sub_;
@@ -102,7 +100,7 @@ class CanBridge : public rclcpp::Node
         void handle_vcu_torque_target_message(const lart_msgs::msg::VcuTorqueTarget::SharedPtr msg);
         void handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget::SharedPtr msg);
         
-        void handle_cubemars_possition_loop_message(const lart_msgs::msg::CubemarsPossitionLoop::SharedPtr msg);
+        void handle_cubemars_position_loop_message(const lart_msgs::msg::CubemarsPositionLoop::SharedPtr msg);
 
         void handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::SharedPtr msg);
         void handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::SharedPtr msg);

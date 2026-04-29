@@ -47,7 +47,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
 
   this->jetson_sub_ = this->create_subscription<lart_msgs::msg::Jetson>("/jetson", 10, std::bind(&CanBridge::handle_jetson_message, this, _1));
   
-  this->cubemars_possition_loop_sub_ = this->create_subscription<lart_msgs::msg::CubemarsPossitionLoop>("/cubemars/possition_loop", 10, std::bind(&CanBridge::handle_cubemars_possition_loop_message, this, _1));
+  this->cubemars_position_loop_sub_ = this->create_subscription<lart_msgs::msg::CubemarsPositionLoop>("/cubemars/position_loop", 10, std::bind(&CanBridge::handle_cubemars_position_loop_message, this, _1));
 
   this->vcu_torque_target_sub_ = this->create_subscription<lart_msgs::msg::VcuTorqueTarget>("/vcu/torque_target", 10, std::bind(&CanBridge::handle_vcu_torque_target_message, this, _1));
   this->vcu_rpm_target_sub_ = this->create_subscription<lart_msgs::msg::VcuRpmTarget>("/vcu/rpm_target", 10, std::bind(&CanBridge::handle_vcu_rpm_target_message, this, _1));
@@ -283,22 +283,22 @@ void CanBridge::handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget
   this->send_can_frame(vcu_rpm_target_frame);
 }
 
-void CanBridge::handle_cubemars_possition_loop_message(const lart_msgs::msg::CubemarsPossitionLoop::SharedPtr msg){
-  autonomous_t26_cube_mars_possition_loop_t cubemars_possition_loop_msg;
-  cubemars_possition_loop_msg.position = msg->position;
+void CanBridge::handle_cubemars_position_loop_message(const lart_msgs::msg::CubemarsPositionLoop::SharedPtr msg){
+  autonomous_t26_cube_mars_position_loop_t cubemars_position_loop_msg;
+  cubemars_position_loop_msg.position = msg->position;
 
-  struct can_frame cubemars_possition_loop_frame;
-  int pack_len = autonomous_t26_cube_mars_possition_loop_pack(
-      cubemars_possition_loop_frame.data,
-      &cubemars_possition_loop_msg,
-      sizeof(cubemars_possition_loop_frame.data));
+  struct can_frame cubemars_position_loop_frame;
+  int pack_len = autonomous_t26_cube_mars_position_loop_pack(
+      cubemars_position_loop_frame.data,
+      &cubemars_position_loop_msg,
+      sizeof(cubemars_position_loop_frame.data));
   if (pack_len < 0) {
-      RCLCPP_ERROR(this->get_logger(), "Failed to pack cubemars_possition_loop message: %d", pack_len);
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack cubemars_position_loop message: %d", pack_len);
       return;
   }
-  cubemars_possition_loop_frame.can_id  = AUTONOMOUS_T26_CUBE_MARS_POSSITION_LOOP_FRAME_ID;
-  cubemars_possition_loop_frame.can_dlc = static_cast<uint8_t>(pack_len);
-  this->send_can_frame(cubemars_possition_loop_frame);
+  cubemars_position_loop_frame.can_id  = AUTONOMOUS_T26_CUBE_MARS_POSITION_LOOP_FRAME_ID;
+  cubemars_position_loop_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(cubemars_position_loop_frame);
 }
 
 void CanBridge::handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::SharedPtr msg){
