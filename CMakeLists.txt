@@ -24,6 +24,10 @@ target_include_directories(can_bridge PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(can_bridge PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17sorteio
 
+include_directories(
+  include
+  ${CMAKE_SOURCE_DIR}/../lart_common
+)
 
 install(TARGETS can_bridge
   DESTINATION lib/${PROJECT_NAME})

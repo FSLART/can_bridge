@@ -26,31 +26,31 @@ CanBridge::CanBridge() : Node("can_bridge"){
   }
 
   //Initiate publishers
-  this->acu_pub_ = this->create_publisher<lart_msgs::msg::Acu>("/acu", 10);
-  this->cube_mars_feedback_pub_ = this->create_publisher<lart_msgs::msg::CubemarsFeedback>("/cubemars/feedback", 10);
-  this->res_pub_ = this->create_publisher<lart_msgs::msg::Res>("/res", 10);
+  this->acu_pub_ = this->create_publisher<lart_msgs::msg::Acu>(TOPIC_CAN_ACU, 10);
+  this->cube_mars_feedback_pub_ = this->create_publisher<lart_msgs::msg::CubemarsFeedback>(TOPIC_CAN_CUBEMARS_FEEDBACK, 10);
+  this->res_pub_ = this->create_publisher<lart_msgs::msg::Res>(TOPIC_CAN_RES, 10);
 
-  this->vcu_hv_pub_ = this->create_publisher<lart_msgs::msg::VcuHv>("/vcu/hv", 10);
-  this->vcu_ign_r2d_pub_ = this->create_publisher<lart_msgs::msg::VcuIgnR2d>("/vcu/ign_r2d", 10);
-  this->vcu_rpm_pub_ = this->create_publisher<lart_msgs::msg::VcuRpm>("/vcu/rpm", 10);
+  this->vcu_hv_pub_ = this->create_publisher<lart_msgs::msg::VcuHv>(TOPIC_CAN_VCU_HV, 10);
+  this->vcu_ign_r2d_pub_ = this->create_publisher<lart_msgs::msg::VcuIgnR2d>(TOPIC_CAN_VCU_IGN_R2D, 10);
+  this->vcu_rpm_pub_ = this->create_publisher<lart_msgs::msg::VcuRpm>(TOPIC_CAN_VCU_RPM, 10);
 
-  this->aquisition1_pub_ = this->create_publisher<lart_msgs::msg::Aqt1>("/aquisition/aqt1", 10);
-  this->aquisition2_pub_ = this->create_publisher<lart_msgs::msg::Aqt2>("/aquisition/aqt2", 10);
-  this->aquisition3_pub_ = this->create_publisher<lart_msgs::msg::Aqt3>("/aquisition/aqt3", 10);
-  this->aquisition4_pub_ = this->create_publisher<lart_msgs::msg::Aqt4>("/aquisition/aqt4", 10);
-  this->aquisition7_pub_ = this->create_publisher<lart_msgs::msg::Aqt7>("/aquisition/aqt7", 10);
+  this->aquisition1_pub_ = this->create_publisher<lart_msgs::msg::Aqt1>(TOPIC_CAN_AQUTION_AQT1, 10);
+  this->aquisition2_pub_ = this->create_publisher<lart_msgs::msg::Aqt2>(TOPIC_CAN_AQUTION_AQT2, 10);
+  this->aquisition3_pub_ = this->create_publisher<lart_msgs::msg::Aqt3>(TOPIC_CAN_AQUTION_AQT3, 10);
+  this->aquisition4_pub_ = this->create_publisher<lart_msgs::msg::Aqt4>(TOPIC_CAN_AQUTION_AQT4, 10);
+  this->aquisition7_pub_ = this->create_publisher<lart_msgs::msg::Aqt7>(TOPIC_CAN_AQUTION_AQT7, 10);
 
   // Initiate subscribers
-  this->dv_dynamics1_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics1>("/dv/dynamics1", 10, std::bind(&CanBridge::handle_dv_dynamics1_message, this, _1));
-  this->dv_dynamics2_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics2>("/dv/dynamics2", 10, std::bind(&CanBridge::handle_dv_dynamics2_message, this, _1));
+  this->dv_dynamics1_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics1>(TOPIC_DV_DYNAMICS1, 10, std::bind(&CanBridge::handle_dv_dynamics1_message, this, _1));
+  this->dv_dynamics2_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics2>(TOPIC_DV_DYNAMICS2, 10, std::bind(&CanBridge::handle_dv_dynamics2_message, this, _1));
   this->dv_status_sub_ = this->create_subscription<lart_msgs::msg::DvStatus>("/dv/status", 10, std::bind(&CanBridge::handle_dv_status_message, this, _1));
 
-  this->jetson_sub_ = this->create_subscription<lart_msgs::msg::Jetson>("/jetson", 10, std::bind(&CanBridge::handle_jetson_message, this, _1));
+  this->jetson_sub_ = this->create_subscription<lart_msgs::msg::Jetson>(TOPIC_JETSON, 10, std::bind(&CanBridge::handle_jetson_message, this, _1));
   
-  this->cubemars_position_loop_sub_ = this->create_subscription<lart_msgs::msg::CubemarsPositionLoop>("/cubemars/position_loop", 10, std::bind(&CanBridge::handle_cubemars_position_loop_message, this, _1));
+  this->cubemars_position_loop_sub_ = this->create_subscription<lart_msgs::msg::CubemarsPositionLoop>(TOPIC_CUBEMARS_POSITION_LOOP, 10, std::bind(&CanBridge::handle_cubemars_position_loop_message, this, _1));
 
-  this->vcu_torque_target_sub_ = this->create_subscription<lart_msgs::msg::VcuTorqueTarget>("/vcu/torque_target", 10, std::bind(&CanBridge::handle_vcu_torque_target_message, this, _1));
-  this->vcu_rpm_target_sub_ = this->create_subscription<lart_msgs::msg::VcuRpmTarget>("/vcu/rpm_target", 10, std::bind(&CanBridge::handle_vcu_rpm_target_message, this, _1));
+  this->vcu_torque_target_sub_ = this->create_subscription<lart_msgs::msg::VcuTorqueTarget>(TOPIC_CONTROL_TORQUE_TARGET, 10, std::bind(&CanBridge::handle_vcu_torque_target_message, this, _1));
+  this->vcu_rpm_target_sub_ = this->create_subscription<lart_msgs::msg::VcuRpmTarget>(TOPIC_CONTROL_RPM_TARGET, 10, std::bind(&CanBridge::handle_vcu_rpm_target_message, this, _1));
   
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
@@ -81,31 +81,6 @@ void CanBridge::handle_can_frame(struct can_frame frame){
   // Handle the received CAN frame
   // RCLCPP_INFO(this->get_logger(), "Received CAN frame with ID: 0x%X", frame.can_id);
   switch(frame.can_id){
-    // case AUTONOMOUS_TEMPORARY_RES_FRAME_ID:{
-    //   autonomous_temporary_res_t res_msg;
-    //   autonomous_temporary_res_unpack(&res_msg, frame.data, frame.can_dlc);
-    //   lart_msgs::msg::State state_msg;
-    //   state_msg.header.stamp = this->now();
-    //   if (res_msg.signal == 5 || res_msg.signal == 7) {
-    //     state_msg.data = lart_msgs::msg::State::DRIVING;
-    //   }else if (res_msg.signal == 0){
-    //     state_msg.data = lart_msgs::msg::State::EMERGENCY;
-    //   }
-    //   // this->state_pub->publish(state_msg);
-    //   break;
-    // }
-    // case AUTONOMOUS_TEMPORARY_ACU_IGN_FRAME_ID:{
-    //   autonomous_temporary_acu_ign_t acu_ign_msg;
-    //   autonomous_temporary_acu_ign_unpack(&acu_ign_msg, frame.data, frame.can_dlc);
-    //   if(acu_ign_msg.asms==1 && !this->nodes_initialized){
-    //     // initialize the AS nodes
-    //   }
-      
-    //   if(acu_ign_msg.asms == 1 && acu_ign_msg.ign == 1){
-    //     //Start recording bag -> send service call to the bag recorder composable node
-    //   }
-    //   break;
-    // }
     case AUTONOMOUS_T26_ACU_FRAME_ID:{
       autonomous_t26_acu_t acu_msg;
       autonomous_t26_acu_unpack(&acu_msg, frame.data, frame.can_dlc);
@@ -116,6 +91,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       acu_ros_msg.acu_cpu_temp = acu_msg.acu_cpu_temp;
       acu_ros_msg.mission_select = acu_msg.mission_select;
       acu_ros_msg.as_state = acu_msg.as_state;
+      acu_ros_msg.emergency = acu_msg.emergency;
       acu_ros_msg.asms = acu_msg.asms;
       acu_ros_msg.ign = acu_msg.ign;
       acu_ros_msg.emergency_cause = acu_msg.emergency_cause;
@@ -141,7 +117,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt1_unpack(&aqt1_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt1 aqt1_ros_msg;
       aqt1_ros_msg.header.stamp = this->now();
-      aqt1_ros_msg.brk_press = aqt1_msg.brk_press;
+      aqt1_ros_msg.frt_brk_press = aqt1_msg.frt_brk_press;
       aqt1_ros_msg.res = aqt1_msg.res;
       aqt1_ros_msg.bots = aqt1_msg.bots;
       this->aquisition1_pub_->publish(aqt1_ros_msg);
@@ -152,7 +128,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt2_unpack(&aqt2_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt2 aqt2_ros_msg;
       aqt2_ros_msg.header.stamp = this->now();
-      aqt2_ros_msg.wheel_angle = aqt2_msg.wheel_angle;
+      aqt2_ros_msg.wheel_spd = aqt2_msg.wheel_spd;
       this->aquisition2_pub_->publish(aqt2_ros_msg);
       break;
     }
@@ -161,7 +137,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt3_unpack(&aqt3_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt3 aqt3_ros_msg;
       aqt3_ros_msg.header.stamp = this->now();
-      aqt3_ros_msg.wheel_angle = aqt3_msg.wheel_angle;
+      aqt3_ros_msg.wheel_spd = aqt3_msg.wheel_spd;
       this->aquisition3_pub_->publish(aqt3_ros_msg);
       break;
     }
@@ -171,8 +147,10 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       lart_msgs::msg::Aqt4 aqt4_ros_msg;
       aqt4_ros_msg.header.stamp = this->now();
       aqt4_ros_msg.st_angle = aqt4_msg.st_angle;
+      aqt4_ros_msg.susp_l = aqt4_msg.susp_l;
+      aqt4_ros_msg.susp_r = aqt4_msg.susp_r;
       aqt4_ros_msg.inertia = aqt4_msg.inertia;
-      aqt4_ros_msg.emer_button = aqt4_msg.emer_button;
+      aqt4_ros_msg.emergency = aqt4_msg.emergency;
       this->aquisition4_pub_->publish(aqt4_ros_msg);
       break;
     }
@@ -181,7 +159,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt7_unpack(&aqt7_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt7 aqt7_ros_msg;
       aqt7_ros_msg.header.stamp = this->now();
-      aqt7_ros_msg.brk_press = aqt7_msg.brk_press;
+      aqt7_ros_msg.rear_brk_press = aqt7_msg.rear_brk_press;
       this->aquisition7_pub_->publish(aqt7_ros_msg);
       break;
     }
@@ -218,7 +196,10 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::VcuRpm vcu_rpm_ros_msg;
       vcu_rpm_ros_msg.header.stamp = this->now();
-      vcu_rpm_ros_msg.rpm_actual = vcu_rpm_msg.rpm_actual;
+      vcu_rpm_ros_msg.motor_rpm_left = vcu_rpm_msg.motor_rpm_left;
+      vcu_rpm_ros_msg.motor_rpm_right = vcu_rpm_msg.motor_rpm_right;
+      vcu_rpm_ros_msg.motor_current_left = vcu_rpm_msg.motor_current_left;
+      vcu_rpm_ros_msg.motor_current_right = vcu_rpm_msg.motor_current_right;
       this->vcu_rpm_pub_->publish(vcu_rpm_ros_msg);
       break;
     }

@@ -13,6 +13,7 @@
 #include <sstream>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include "topics.h"
 
 #include "lart_msgs/msg/dv_dynamics1.hpp"
 #include "lart_msgs/msg/dv_dynamics2.hpp"
