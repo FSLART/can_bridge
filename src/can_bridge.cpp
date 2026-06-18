@@ -1,8 +1,9 @@
 #include "can_bridge/can_bridge.hpp"
 using std::placeholders::_1;
 
-CanBridge::CanBridge() : Node("can_bridge")
-{
+using namespace std::placeholders;
+
+CanBridge::CanBridge() : Node("can_bridge"){
   RCLCPP_INFO(this->get_logger(), "Can Bridge Node has been started");
 
   // create a socket
@@ -27,38 +28,36 @@ CanBridge::CanBridge() : Node("can_bridge")
     exit(1);
   }
 
-  // Initiate publishers
-  this->state_pub = this->create_publisher<lart_msgs::msg::State>("/state/acu", 10);
-  this->mission_pub = this->create_publisher<lart_msgs::msg::Mission>("/mission/acu", 10);
-  this->dynamics_pub = this->create_publisher<lart_msgs::msg::Dynamics>("/dynamics", 10);
-  this->vcu_rpm_pub = this->create_publisher<lart_msgs::msg::VcuRpm>("/vcu_rpm", 10);
-  this->vcu_hv_pub = this->create_publisher<lart_msgs::msg::VcuHv>("/vcuHv", 10);
-  this->dyn_front_sig1_pub = this->create_publisher<lart_msgs::msg::DynFrontSig1>("/dynfrontsig1", 10); //st angle, suspensions
-  this->dyn_front_sig2_pub = this->create_publisher<lart_msgs::msg::DynFrontSig2>("/dynfrontsig2", 10); //wheel speeds
-  this->dyn_rear_sig1_pub = this->create_publisher<lart_msgs::msg::DynRearSig1>("/dynrearsig1", 10); // brake pressures, suspensions
-  this->dyn_rear_sig2_pub = this->create_publisher<lart_msgs::msg::DynRearSig2>("/dynrearsig2", 10); //wheel speeds
-  this->asf_signals_pub = this->create_publisher<lart_msgs::msg::AsfSignals>("/asfsignals", 10);
-  this->vcu_ign_r2_d_pub = this->create_publisher<lart_msgs::msg::VcuIgnR2d>("/vcuignr2d", 10);
-  this->acu_status_pub = this->create_publisher<lart_msgs::msg::AcuStatus>("/acustatus", 10);
-  this->maxon_status_tx_pub = this->create_publisher<lart_msgs::msg::MaxonStatusTx>("/maxonstatustx", 10);
-  this->maxon_status2_tx_pub = this->create_publisher<lart_msgs::msg::MaxonStatus2Tx>("/maxonstatus2tx", 10);
-  this->maxon_position_tx_pub = this->create_publisher<lart_msgs::msg::MaxonPositionTx>("/maxonpositiontx", 10);
-  this->maxon_velocity_tx_pub = this->create_publisher<lart_msgs::msg::MaxonVelocityTx>("/maxonvelocitytx", 10);
+  //Initiate publishers
+  this->acu_pub_ = this->create_publisher<lart_msgs::msg::Acu>(TOPIC_CAN_ACU, 10);
+  this->cube_mars_feedback_pub_ = this->create_publisher<lart_msgs::msg::CubemarsFeedback>(TOPIC_CAN_CUBEMARS_FEEDBACK, 10);
+  this->res_pub_ = this->create_publisher<lart_msgs::msg::Res>(TOPIC_CAN_RES, 10);
 
-  // Initiate Subscribers
-  // verificar
-  this->state_sub = this->create_subscription<lart_msgs::msg::State>("/state", 10, std::bind(&CanBridge::StateCallBack, this, _1));
-  this->ekf_state_sub = this->create_subscription<geometry_msgs::msg::PoseStamped>("/PoseStamped", 10, std::bind(&CanBridge::ekfStateCallback, this, _1));
-  this->ekf_stats_sub = this->create_subscription<lart_msgs::msg::SlamStats>("/SlamStats", 10, std::bind(&CanBridge::ekfStatsCallback, this, _1));
-  this->control_sub = this->create_subscription<lart_msgs::msg::DynamicsCMD>("/DynamicsCMD", 10, std::bind(&CanBridge::ControlCallback, this, _1));
-  this->accelerations_sub = this->create_subscription<geometry_msgs::msg::Vector3Stamped>("/imu/acceleration", 10, std::bind(&CanBridge::accelerationsCallback, this, _1));
+  this->vcu_hv_pub_ = this->create_publisher<lart_msgs::msg::VcuHv>(TOPIC_CAN_VCU_HV, 10);
+  this->vcu_ign_r2d_pub_ = this->create_publisher<lart_msgs::msg::VcuIgnR2d>(TOPIC_CAN_VCU_IGN_R2D, 10);
+  this->vcu_rpm_pub_ = this->create_publisher<lart_msgs::msg::VcuRpm>(TOPIC_CAN_VCU_RPM, 10);
 
+  this->aquisition1_pub_ = this->create_publisher<lart_msgs::msg::Aqt1>(TOPIC_CAN_AQUTION_AQT1, 10);
+  this->aquisition2_pub_ = this->create_publisher<lart_msgs::msg::Aqt2>(TOPIC_CAN_AQUTION_AQT2, 10);
+  this->aquisition3_pub_ = this->create_publisher<lart_msgs::msg::Aqt3>(TOPIC_CAN_AQUTION_AQT3, 10);
+  this->aquisition4_pub_ = this->create_publisher<lart_msgs::msg::Aqt4>(TOPIC_CAN_AQUTION_AQT4, 10);
+  this->aquisition7_pub_ = this->create_publisher<lart_msgs::msg::Aqt7>(TOPIC_CAN_AQUTION_AQT7, 10);
+
+  // Initiate subscribers
+  this->dv_dynamics1_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics1>(TOPIC_DV_DYNAMICS1, 10, std::bind(&CanBridge::handle_dv_dynamics1_message, this, _1));
+  this->dv_dynamics2_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics2>(TOPIC_DV_DYNAMICS2, 10, std::bind(&CanBridge::handle_dv_dynamics2_message, this, _1));
+  this->dv_status_sub_ = this->create_subscription<lart_msgs::msg::DvStatus>("/dv/status", 10, std::bind(&CanBridge::handle_dv_status_message, this, _1));
+
+  this->jetson_sub_ = this->create_subscription<lart_msgs::msg::Jetson>(TOPIC_JETSON, 10, std::bind(&CanBridge::handle_jetson_message, this, _1));
+  
+  this->cubemars_position_loop_sub_ = this->create_subscription<lart_msgs::msg::CubemarsPositionLoop>(TOPIC_CUBEMARS_POSITION_LOOP, 10, std::bind(&CanBridge::handle_cubemars_position_loop_message, this, _1));
+
+  this->vcu_torque_target_sub_ = this->create_subscription<lart_msgs::msg::VcuTorqueTarget>(TOPIC_CONTROL_TORQUE_TARGET, 10, std::bind(&CanBridge::handle_vcu_torque_target_message, this, _1));
+  this->vcu_rpm_target_sub_ = this->create_subscription<lart_msgs::msg::VcuRpmTarget>(TOPIC_CONTROL_RPM_TARGET, 10, std::bind(&CanBridge::handle_vcu_rpm_target_message, this, _1));
+  
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
   read_can_thread.detach();
-
-  std::thread send_can_thread(&CanBridge::send_can_frames, this);
-  send_can_thread.detach();
 }
 
 void CanBridge::read_can_frame()
@@ -86,433 +85,304 @@ void CanBridge::send_can_frame(struct can_frame frame)
   }
 }
 
-void CanBridge::send_can_frames()
-{
-  while (rclcpp::ok())
-  {
-    {
-      // this->sendState();
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-  }
-}
-
-// verificar
-void CanBridge::StateCallBack(const lart_msgs::msg::State::SharedPtr msg)
-{
-  autonomous_temporary_as_state_t as_state_msg;
-  as_state_msg.state = msg->data;
-  struct can_frame as_state_frame; // duvida isto existe ou posso dar um nome qualquer?
-  int pack_len = autonomous_temporary_as_state_pack(as_state_frame.data, &as_state_msg, sizeof(as_state_msg));
-  if (pack_len < 0)
-  {
-    RCLCPP_ERROR(this->get_logger(), "Failed to pack as_state message: %d", pack_len);
-  }
-  as_state_frame.can_id = AUTONOMOUS_TEMPORARY_AS_STATE_FRAME_ID;
-  as_state_frame.can_dlc = AUTONOMOUS_TEMPORARY_AS_STATE_LENGTH;
-  this->send_can_frame(as_state_frame);
-}
-
-void CanBridge::ekfStateCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
-{
-  autonomous_temporary_jetson_debug_t jetson_debug_msg;
-  jetson_debug_msg.pos_x = msg->pose.position.x;
-  jetson_debug_msg.pos_y = msg->pose.position.y;
-  struct can_frame ekf_state_frame;
-  std::ifstream file("/sys/devices/virtual/thermal/thermal_zone1/temp");
-  int temp;
-  file >> temp;
-  float final_temp = temp / 1000.0;
-  jetson_debug_msg.temperature = final_temp;
-  int pack_len = autonomous_temporary_jetson_debug_pack(ekf_state_frame.data, &jetson_debug_msg, sizeof(jetson_debug_msg));
-  if (pack_len < 0)
-  {
-    RCLCPP_ERROR(this->get_logger(), "Failed to pack EkfState message: %d", pack_len);
-    // duvida aqui n devia sair?
-  }
-  ekf_state_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_DEBUG_FRAME_ID;
-  ekf_state_frame.can_dlc = AUTONOMOUS_TEMPORARY_JETSON_DEBUG_LENGTH;
-  this->send_can_frame(ekf_state_frame);
-}
-
-void CanBridge::ekfStatsCallback(const lart_msgs::msg::SlamStats::SharedPtr msg)
-{
-  (void)msg;
-  autonomous_temporary_jetson_data_1_t jetson_data_1_msg;
-  struct can_frame ekf_stats_frame;
-  // not filled
-  jetson_data_1_msg.actual_angle = 0;
-  jetson_data_1_msg.actual_speed = 0;
-  jetson_data_1_msg.current_cone_count = 0;
-  jetson_data_1_msg.lap_count = 0;
-  jetson_data_1_msg.target_angle = 0;
-  jetson_data_1_msg.target_speed = 0;
-  jetson_data_1_msg.total_cone_count = 0;
-
-  int pack_len = autonomous_temporary_jetson_data_1_pack(ekf_stats_frame.data, &jetson_data_1_msg, sizeof(jetson_data_1_msg));
-  if (pack_len < 0)
-  {
-    RCLCPP_ERROR(this->get_logger(), "Failed to pack EkfStats message: %d", pack_len);
-  }
-  ekf_stats_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_DATA_1_FRAME_ID;
-  ekf_stats_frame.can_dlc = AUTONOMOUS_TEMPORARY_JETSON_DATA_1_LENGTH;
-
-  this->send_can_frame(ekf_stats_frame);
-}
-
-void CanBridge::ControlCallback(const lart_msgs::msg::DynamicsCMD::SharedPtr msg)
-{
-  autonomous_temporary_rpm_target_t control_msg;
-  struct can_frame control_frame;
-  control_frame.can_id = AUTONOMOUS_TEMPORARY_RPM_TARGET_FRAME_ID;
-  control_frame.can_dlc = 2;
-  control_msg.rpm_target = msg->rpm;
-
-  autonomous_temporary_rpm_target_pack(control_frame.data, &control_msg, sizeof(control_msg));
-  this->send_can_frame(control_frame);
-
-  // Target Position Frame
-  struct can_frame target_position_frame;
-  target_position_frame = positionToMaxonCmd(maxon_offset, msg->steering_angle);
-  this->send_can_frame(target_position_frame);
-}
-
-void CanBridge::accelerationsCallback(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg)
-{
-  (void)msg;
-}
-
-void CanBridge::service_bag_start()
-{
-  if (!recordBag_service_activated)
-  {
-    // mudar de nomes das variaveis e verificar os tipos
-    this->start_recording_bag = this->create_client<std_srvs::srv::Trigger>("/start_recording");
-
-    while (!this->start_recording_bag->wait_for_service(std::chrono::seconds(1)))
-    {
-      if (!rclcpp::ok())
-      {
-        RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for /start_recording service.");
-        return;
-      }
-      RCLCPP_INFO(this->get_logger(), "Waiting for /start_recording service...");
-    }
-
-    this->stop_recording_bag = this->create_client<std_srvs::srv::Trigger>("/stop_recording"); // Check this message
-
-    while (!this->stop_recording_bag->wait_for_service(std::chrono::seconds(1)))
-    {
-      if (!rclcpp::ok())
-      {
-        RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for /stop_recording.");
-        return;
-      }
-      RCLCPP_INFO(this->get_logger(), "Waiting for /stop_recording...");
-    }
-  }
-}
-
-// composable pos node
-void CanBridge::start_recording_request()
-{
-  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  auto future = this->start_recording_bag->async_send_request(
-      request,
-      std::bind(&CanBridge::handle_start_recording_response, this, _1));
-}
-
-void CanBridge::handle_start_recording_response(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
-{
-  // Perguntar se o start recording envia alguma msg ou se apenas começa a gravar
-  try
-  {
-    auto response = future.get();
-  }
-  catch (const std::exception &e)
-  {
-    RCLCPP_ERROR(this->get_logger(), "Service call failed: %s", e.what());
-  }
-}
-
-void CanBridge::stop_recording_request()
-{
-  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  auto response = this->stop_recording_bag->async_send_request(
-      request,
-      std::bind(&CanBridge::hanlde_stop_recording_response, this, _1));
-}
-
-void CanBridge::hanlde_stop_recording_response(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
-{
-  try
-  {
-    auto response = future.get();
-  }
-  catch (const std::exception &e)
-  {
-    RCLCPP_ERROR(this->get_logger(), "Service call failed: %s", e.what());
-  }
-}
-
-void CanBridge::handle_can_frame(struct can_frame frame)
-{
+void CanBridge::handle_can_frame(struct can_frame frame){
   // Handle the received CAN frame
-  RCLCPP_INFO(this->get_logger(), "Received CAN frame with ID: 0x%X", frame.can_id);
-  // Add your handling logic here
-  switch (frame.can_id)
-  {
-  case AUTONOMOUS_TEMPORARY_ACU_MS_FRAME_ID:
-  {
-    autonomous_temporary_acu_ms_t acu_ms_msg;
-    autonomous_temporary_acu_ms_unpack(&acu_ms_msg, frame.data, frame.can_dlc);
-    autonomous_temporary_jetson_ms_t jetson_ms_msg;
-    jetson_ms_msg.mission_select = acu_ms_msg.mission_select;
-    struct can_frame jetson_ms_frame;
-    int pack_len = autonomous_temporary_jetson_ms_pack(
-        jetson_ms_frame.data,
-        &jetson_ms_msg,
-        sizeof(jetson_ms_frame.data));
-    if (pack_len < 0)
-    {
-      RCLCPP_ERROR(this->get_logger(), "Failed to pack jetson_ms message: %d", pack_len);
+  // RCLCPP_INFO(this->get_logger(), "Received CAN frame with ID: 0x%X", frame.can_id);
+  switch(frame.can_id){
+    case AUTONOMOUS_T26_ACU_FRAME_ID:{
+      autonomous_t26_acu_t acu_msg;
+      autonomous_t26_acu_unpack(&acu_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::Acu acu_ros_msg;
+      acu_ros_msg.header.stamp = this->now();
+      acu_ros_msg.assi_state = acu_msg.assi_state;
+      acu_ros_msg.acu_state = acu_msg.acu_state;
+      acu_ros_msg.acu_cpu_temp = acu_msg.acu_cpu_temp;
+      acu_ros_msg.mission_select = acu_msg.mission_select;
+      acu_ros_msg.as_state = acu_msg.as_state;
+      acu_ros_msg.emergency = acu_msg.emergency;
+      acu_ros_msg.asms = acu_msg.asms;
+      acu_ros_msg.ign = acu_msg.ign;
+      acu_ros_msg.emergency_cause = acu_msg.emergency_cause;
+      this->acu_pub_->publish(acu_ros_msg);
+
       break;
     }
-    jetson_ms_frame.can_id = AUTONOMOUS_TEMPORARY_JETSON_MS_FRAME_ID;
-    jetson_ms_frame.can_dlc = static_cast<uint8_t>(pack_len);
-    this->send_can_frame(jetson_ms_frame);
-
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_VCU_RPM_FRAME_ID:
-  {
-    autonomous_temporary_vcu_rpm_t vcu_rpm_msg;
-    autonomous_temporary_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::VcuRpm ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.rpm_actual = vcu_rpm_msg.rpm_actual;
-    this->vcu_rpm_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_ACU_IGN_FRAME_ID:
-  {
-    autonomous_temporary_acu_ign_t acu_ign_msg;
-    autonomous_temporary_acu_ign_unpack(&acu_ign_msg, frame.data, frame.can_dlc);
-    if (acu_ign_msg.asms == 1 && !this->nodes_initialized)
-    {
-      // initialize the AS nodes
-      send_can_frame(turnOnCANOpenDevicesFrame);
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
-      send_can_frame(enterPreOpModeCmdFrame);
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
-      send_can_frame(opModeCmdFrame);
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
-      send_can_frame(setVelocityCmd());
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
-      send_can_frame(shutdownCmdFrame);
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
-      send_can_frame(newValueFrame);
+    case AUTONOMOUS_T26_CUBE_MARS_FEEDBACK_FRAME_ID:{
+      autonomous_t26_cube_mars_feedback_t cube_mars_feedback_msg;
+      autonomous_t26_cube_mars_feedback_unpack(&cube_mars_feedback_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::CubemarsFeedback cube_mars_feedback_ros_msg;
+      cube_mars_feedback_ros_msg.header.stamp = this->now();
+      cube_mars_feedback_ros_msg.position = cube_mars_feedback_msg.position;
+      cube_mars_feedback_ros_msg.speed_rpm = cube_mars_feedback_msg.speed_rpm;
+      cube_mars_feedback_ros_msg.current = cube_mars_feedback_msg.current;
+      cube_mars_feedback_ros_msg.driver_temp = cube_mars_feedback_msg.driver_temp;
+      cube_mars_feedback_ros_msg.error_code = cube_mars_feedback_msg.error_code;
+      this->cube_mars_feedback_pub_->publish(cube_mars_feedback_ros_msg);
+      break;
+    }
+    case AUTONOMOUS_T26_AQT1_FRAME_ID:{
+      autonomous_t26_aqt1_t aqt1_msg;
+      autonomous_t26_aqt1_unpack(&aqt1_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::Aqt1 aqt1_ros_msg;
+      aqt1_ros_msg.header.stamp = this->now();
+      aqt1_ros_msg.frt_brk_press = aqt1_msg.frt_brk_press;
+      aqt1_ros_msg.res = aqt1_msg.res;
+      aqt1_ros_msg.bots = aqt1_msg.bots;
+      this->aquisition1_pub_->publish(aqt1_ros_msg);
+      break;
+    }
+    case AUTONOMOUS_T26_AQT2_FRAME_ID:{
+      autonomous_t26_aqt2_t aqt2_msg;
+      autonomous_t26_aqt2_unpack(&aqt2_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::Aqt2 aqt2_ros_msg;
+      aqt2_ros_msg.header.stamp = this->now();
+      aqt2_ros_msg.wheel_spd = aqt2_msg.wheel_spd;
+      this->aquisition2_pub_->publish(aqt2_ros_msg);
+      break;
+    }
+    case AUTONOMOUS_T26_AQT3_FRAME_ID:{
+      autonomous_t26_aqt3_t aqt3_msg;
+      autonomous_t26_aqt3_unpack(&aqt3_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::Aqt3 aqt3_ros_msg;
+      aqt3_ros_msg.header.stamp = this->now();
+      aqt3_ros_msg.wheel_spd = aqt3_msg.wheel_spd;
+      this->aquisition3_pub_->publish(aqt3_ros_msg);
+      break;
+    }
+    case AUTONOMOUS_T26_AQT4_FRAME_ID:{
+      autonomous_t26_aqt4_t aqt4_msg;
+      autonomous_t26_aqt4_unpack(&aqt4_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::Aqt4 aqt4_ros_msg;
+      aqt4_ros_msg.header.stamp = this->now();
+      aqt4_ros_msg.st_angle = aqt4_msg.st_angle;
+      aqt4_ros_msg.susp_l = aqt4_msg.susp_l;
+      aqt4_ros_msg.susp_r = aqt4_msg.susp_r;
+      aqt4_ros_msg.inertia = aqt4_msg.inertia;
+      aqt4_ros_msg.emergency = aqt4_msg.emergency;
+      this->aquisition4_pub_->publish(aqt4_ros_msg);
+      break;
+    }
+    case AUTONOMOUS_T26_AQT7_FRAME_ID:{
+      autonomous_t26_aqt7_t aqt7_msg;
+      autonomous_t26_aqt7_unpack(&aqt7_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::Aqt7 aqt7_ros_msg;
+      aqt7_ros_msg.header.stamp = this->now();
+      aqt7_ros_msg.rear_brk_press = aqt7_msg.rear_brk_press;
+      this->aquisition7_pub_->publish(aqt7_ros_msg);
+      break;
+    }
+    case AUTONOMOUS_T26_VCU_IGN_R2_D_FRAME_ID:{
+      autonomous_t26_vcu_ign_r2_d_t vcu_ign_r2_d_msg;
+      autonomous_t26_vcu_ign_r2_d_unpack(&vcu_ign_r2_d_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::VcuIgnR2d vcu_ign_r2_d_ros_msg;
+      vcu_ign_r2_d_ros_msg.header.stamp = this->now();
+      vcu_ign_r2_d_ros_msg.ignition_manual = vcu_ign_r2_d_msg.ignition_manual;
+      vcu_ign_r2_d_ros_msg.r2d_manual = vcu_ign_r2_d_msg.r2d_manual;
+      vcu_ign_r2_d_ros_msg.ignition_auto = vcu_ign_r2_d_msg.ignition_auto;
+      vcu_ign_r2_d_ros_msg.r2d_auto = vcu_ign_r2_d_msg.r2d_auto;
+      vcu_ign_r2_d_ros_msg.shutdown_signal = vcu_ign_r2_d_msg.shutdown_signal;
+      vcu_ign_r2_d_ros_msg.vcu_state = vcu_ign_r2_d_msg.vcu_state;
+      vcu_ign_r2_d_ros_msg.r2d_button_raw = vcu_ign_r2_d_msg.r2_d_button_raw;
+      vcu_ign_r2_d_ros_msg.ignition_switch_raw = vcu_ign_r2_d_msg.ignition_switch_raw;
+      this->vcu_ign_r2d_pub_->publish(vcu_ign_r2_d_ros_msg);
+      
+      break;
+    }
+    case AUTONOMOUS_T26_VCU_HV_FRAME_ID:{
+      autonomous_t26_vcu_hv_t vcu_hv_msg;
+      autonomous_t26_vcu_hv_unpack(&vcu_hv_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::VcuHv vcu_hv_ros_msg;
+      vcu_hv_ros_msg.header.stamp = this->now();
+      vcu_hv_ros_msg.hv = vcu_hv_msg.hv;
+      vcu_hv_ros_msg.brake_pressure_front = vcu_hv_msg.brake_pressure_front;
+      vcu_hv_ros_msg.brake_pressure_rear = vcu_hv_msg.brake_pressure_rear;
+      this->vcu_hv_pub_->publish(vcu_hv_ros_msg);
+      break;
+    }
+    case AUTONOMOUS_T26_VCU_RPM_FRAME_ID:{
+      autonomous_t26_vcu_rpm_t vcu_rpm_msg;
+      autonomous_t26_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::VcuRpm vcu_rpm_ros_msg;
+      vcu_rpm_ros_msg.header.stamp = this->now();
+      vcu_rpm_ros_msg.motor_rpm_left = vcu_rpm_msg.motor_rpm_left;
+      vcu_rpm_ros_msg.motor_rpm_right = vcu_rpm_msg.motor_rpm_right;
+      vcu_rpm_ros_msg.motor_current_left = vcu_rpm_msg.motor_current_left;
+      vcu_rpm_ros_msg.motor_current_right = vcu_rpm_msg.motor_current_right;
+      this->vcu_rpm_pub_->publish(vcu_rpm_ros_msg);
+      break;
+    }
+    case AUTONOMOUS_T26_RES_FRAME_ID:{
+      autonomous_t26_res_t res_msg;
+      autonomous_t26_res_unpack(&res_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::Res res_ros_msg;
+      res_ros_msg.header.stamp = this->now();
+      res_ros_msg.signal = res_msg.signal;
+      this->res_pub_->publish(res_ros_msg);
+      break;
     }
 
-    if (acu_ign_msg.asms == 1 && acu_ign_msg.ign == 1)
-    {
-      // Start recording bag -> send service call to the bag recorder composable node
-      service_bag_start();
-      start_recording_request();
+    case AUTONOMOUS_T26_ASF_SIGNALS_FRAME_ID:{
+      autonomous_t26_asf_signals_t asf_signals_msg;
+      autonomous_t26_asf_signals_unpack(&asf_signals_msg, frame.data, frame.can_dlc);
+      lart_msgs::msg::AsfSignals asf_signals_ros_msg;
+      asf_signals_ros_msg.header.stamp = this->now();
+      asf_signals_ros_msg.ebs_pressure_tank_front = asf_signals_msg.ebs_pressure_tank_front;
+      asf_signals_ros_msg.ebs_pressure_tank_rear = asf_signals_msg.ebs_pressure_tank_rear;
+      asf_signals_ros_msg.brake_pressure_front = asf_signals_msg.brake_pressure_front;
+      asf_signals_ros_msg.brake_pressure_rear = asf_signals_msg.brake_pressure_rear;
+      this->asf_signals_pub_->publish(asf_signals_ros_msg);
+      break;
     }
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_VCU_HV_FRAME_ID:
-  {
-    autonomous_temporary_vcu_hv_t vcu_hv_msg;
-    autonomous_temporary_vcu_hv_unpack(&vcu_hv_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::VcuHv ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.brake_pressure_front = vcu_hv_msg.brake_pressure_front;
-    ros_msg.brake_pressure_rear = vcu_hv_msg.brake_pressure_rear;
-    ros_msg.hv = vcu_hv_msg.hv;
-    this->vcu_hv_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_RES_FRAME_ID:
-  {
-    autonomous_temporary_res_t res_msg;
-    autonomous_temporary_res_unpack(&res_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::State state_msg;
-    state_msg.header.stamp = this->now();
-    if (res_msg.signal == 5 || res_msg.signal == 7)
-    {
-      state_msg.data = lart_msgs::msg::State::DRIVING;
-    }
-    else if (res_msg.signal == 0)
-    {
-      state_msg.data = lart_msgs::msg::State::EMERGENCY;
-    }
-    this->state_pub->publish(state_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG1_FRAME_ID:
-  {
-    autonomous_temporary_dyn_front_sig1_t dyn_front_sig1_msg;
-    autonomous_temporary_dyn_front_sig1_unpack(&dyn_front_sig1_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::DynFrontSig1 ros_msg;
-    ros_msg.header.stamp = this->now();
-
-    ros_msg.st_angle = dyn_front_sig1_msg.st_angle;
-    ros_msg.susp_l = dyn_front_sig1_msg.susp_l;
-    ros_msg.susp_r = dyn_front_sig1_msg.susp_r;
-    this->dyn_front_sig1_pub->publish(ros_msg);
-    if (!maxon_offset_defined && maxon_activated && maxon_initial_position_defined)
-    {
-      int raw_angle_pos = RAD_SW_ANGLE_TO_ACTUATOR_POS(DEG_TO_RAD(dyn_front_sig1_msg.st_angle)); // calculate the position of the maxon in encoder ticks
-      maxon_offset = maxon_initial_position + raw_angle_pos;                                     // set the relative zero to the first position of the maxon when the system is turned on
-      maxon_offset_defined = true;
-    }
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_DYN_FRONT_SIG2_FRAME_ID:
-  {
-    autonomous_temporary_dyn_front_sig2_t dyn_front_sig2_msg;
-    autonomous_temporary_dyn_front_sig2_unpack(&dyn_front_sig2_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::DynFrontSig2 ros_msg;
-
-    ros_msg.header.stamp = this->now();
-    ros_msg.spd_left = dyn_front_sig2_msg.spd_left;
-    ros_msg.spd_right = dyn_front_sig2_msg.spd_right;
-    this->dyn_front_sig2_pub->publish(ros_msg);
-    break;
-  }
-
-  case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG1_FRAME_ID:
-  {
-    autonomous_temporary_dyn_front_sig1_t dyn_rear_sig1_msg;
-    autonomous_temporary_dyn_front_sig1_unpack(&dyn_rear_sig1_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::DynRearSig1 ros_msg;
-
-    ros_msg.header.stamp = this->now();
-    ros_msg.brk_press = dyn_rear_sig1_msg.st_angle; // mostrar isto ao ANDRE!!
-    ros_msg.susp_l = dyn_rear_sig1_msg.susp_l;
-    ros_msg.susp_r = dyn_rear_sig1_msg.susp_r;
-    this->dyn_rear_sig1_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_DYN_REAR_SIG2_FRAME_ID:
-  {
-    autonomous_temporary_dyn_rear_sig2_t dyn_rear_sig2_msg;
-    autonomous_temporary_dyn_rear_sig2_unpack(&dyn_rear_sig2_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::DynRearSig2 ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.spd_left = dyn_rear_sig2_msg.spd_left;
-    ros_msg.spd_right = dyn_rear_sig2_msg.spd_right;
-    this->dyn_rear_sig2_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_ASF_SIGNALS_FRAME_ID:
-  {
-    autonomous_temporary_asf_signals_t asf_signals_msg;
-    autonomous_temporary_asf_signals_unpack(&asf_signals_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::AsfSignals ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.brake_pressure_front = asf_signals_msg.brake_pressure_front;
-    ros_msg.brake_pressure_rear = asf_signals_msg.brake_pressure_rear;
-    ros_msg.ebs_pressure_tank_front = asf_signals_msg.ebs_pressure_tank_front;
-    ros_msg.ebs_pressure_tank_rear = asf_signals_msg.ebs_pressure_tank_rear;
-    this->asf_signals_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_VCU_IGN_R2_D_FRAME_ID:
-  {
-    autonomous_temporary_vcu_ign_r2_d_t vcu_ign_r2_d_msg;
-    autonomous_temporary_vcu_ign_r2_d_unpack(&vcu_ign_r2_d_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::VcuIgnR2d ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.ignition_auto = vcu_ign_r2_d_msg.ignition_auto;
-    ros_msg.ignition_manual = vcu_ign_r2_d_msg.ignition_manual;
-    ros_msg.ignition_switch_raw = vcu_ign_r2_d_msg.ignition_switch_raw;
-    ros_msg.r2d_button_raw = vcu_ign_r2_d_msg.r2_d_button_raw;
-    ros_msg.r2d_auto = vcu_ign_r2_d_msg.r2d_auto;
-    ros_msg.r2d_manual = vcu_ign_r2_d_msg.r2d_manual;
-    ros_msg.shutdown_signal = vcu_ign_r2_d_msg.shutdown_signal;
-    ros_msg.vcu_state = vcu_ign_r2_d_msg.vcu_state;
-    this->vcu_ign_r2_d_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_ACU_STATUS_FRAME_ID:
-  {
-    autonomous_temporary_acu_status_t acu_status_msg;
-    autonomous_temporary_acu_status_unpack(&acu_status_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::AcuStatus ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.acu_state = acu_status_msg.acu_state;
-    ros_msg.assi_state = acu_status_msg.assi_state;
-    ros_msg.internal_temperature = acu_status_msg.internal_temperature;
-    this->acu_status_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_MAXON_STATUS_TX_FRAME_ID:
-  {
-    autonomous_temporary_maxon_status_tx_t maxon_status_tx_msg;
-    autonomous_temporary_maxon_status_tx_unpack(&maxon_status_tx_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::MaxonStatusTx ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.control_word = maxon_status_tx_msg.control_word;
-    ros_msg.current_actual_value = maxon_status_tx_msg.current_actual_value;
-    ros_msg.status_word = maxon_status_tx_msg.status_word;
-    this->maxon_status_tx_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_MAXON_STATUS2_TX_FRAME_ID:
-  {
-    autonomous_temporary_maxon_status2_tx_t maxon_status2_tx_msg;
-    autonomous_temporary_maxon_status2_tx_unpack(&maxon_status2_tx_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::MaxonStatus2Tx ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.error_code = maxon_status2_tx_msg.error_code;
-    ros_msg.status_word = maxon_status2_tx_msg.status_word;
-    ros_msg.current_average_value = maxon_status2_tx_msg.current_average_value;
-
-    this->maxon_status2_tx_pub->publish(ros_msg);
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_MAXON_POSITION_TX_FRAME_ID:
-  {
-    autonomous_temporary_maxon_position_tx_t maxon_position_tx_msg;
-    autonomous_temporary_maxon_position_tx_unpack(&maxon_position_tx_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::MaxonPositionTx ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.status_word = maxon_position_tx_msg.status_word;
-    ros_msg.actual_position = maxon_position_tx_msg.actual_position;
-    ros_msg.actual_torque = maxon_position_tx_msg.actual_torque;
-    this->maxon_position_tx_pub->publish(ros_msg);
-    if (!maxon_initial_position_defined)
-    {
-      maxon_initial_position = maxon_position_tx_msg.actual_position;
-      maxon_initial_position_defined = true;
-    }
-    break;
-  }
-  case AUTONOMOUS_TEMPORARY_MAXON_VELOCITY_TX_FRAME_ID:
-  {
-    autonomous_temporary_maxon_velocity_tx_t maxon_velocity_tx_msg;
-    autonomous_temporary_maxon_velocity_tx_unpack(&maxon_velocity_tx_msg, frame.data, frame.can_dlc);
-    lart_msgs::msg::MaxonVelocityTx ros_msg;
-    ros_msg.header.stamp = this->now();
-    ros_msg.status_word = maxon_velocity_tx_msg.status_word;
-    ros_msg.actual_velocity = maxon_velocity_tx_msg.actual_velocity;
-    ros_msg.pdw_duty_cicle_actual_value = maxon_velocity_tx_msg.status_word;
-    this->maxon_velocity_tx_pub->publish(ros_msg);
-    break;
-  }
-  case MAXON_HEARTBEAT_ID:
-    if (frame.data[0] == 0x05)
-    {
-      this->maxon_activated = true;
-    }
-    break;
   }
 }
 
-int main(int argc, char **argv)
+void CanBridge::handle_vcu_torque_target_message(const lart_msgs::msg::VcuTorqueTarget::SharedPtr msg){
+  autonomous_t26_vcu_torque_target_t vcu_torque_target_msg;
+  vcu_torque_target_msg.torque_target = msg->torque_target;
+
+  struct can_frame vcu_torque_target_frame;
+  int pack_len = autonomous_t26_vcu_torque_target_pack(
+      vcu_torque_target_frame.data,
+      &vcu_torque_target_msg,
+      sizeof(vcu_torque_target_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack vcu_torque_target message: %d", pack_len);
+      return;
+  }
+  vcu_torque_target_frame.can_id  = AUTONOMOUS_T26_VCU_TORQUE_TARGET_FRAME_ID;
+  vcu_torque_target_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(vcu_torque_target_frame);
+}
+
+void CanBridge::handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget::SharedPtr msg){
+  autonomous_t26_vcu_rpm_target_t vcu_rpm_target_msg;
+  vcu_rpm_target_msg.rpm_target = msg->rpm_target;
+
+  struct can_frame vcu_rpm_target_frame;
+  int pack_len = autonomous_t26_vcu_rpm_target_pack(
+      vcu_rpm_target_frame.data,
+      &vcu_rpm_target_msg,
+      sizeof(vcu_rpm_target_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack vcu_rpm_target message: %d", pack_len);
+      return;
+  }
+  vcu_rpm_target_frame.can_id  = AUTONOMOUS_T26_VCU_RPM_TARGET_FRAME_ID;
+  vcu_rpm_target_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(vcu_rpm_target_frame);
+}
+
+void CanBridge::handle_cubemars_position_loop_message(const lart_msgs::msg::CubemarsPositionLoop::SharedPtr msg){
+  autonomous_t26_cube_mars_position_loop_t cubemars_position_loop_msg;
+  cubemars_position_loop_msg.position = msg->position;
+
+  struct can_frame cubemars_position_loop_frame;
+  int pack_len = autonomous_t26_cube_mars_position_loop_pack(
+      cubemars_position_loop_frame.data,
+      &cubemars_position_loop_msg,
+      sizeof(cubemars_position_loop_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack cubemars_position_loop message: %d", pack_len);
+      return;
+  }
+  cubemars_position_loop_frame.can_id  = AUTONOMOUS_T26_CUBE_MARS_POSITION_LOOP_FRAME_ID;
+  cubemars_position_loop_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(cubemars_position_loop_frame);
+}
+
+void CanBridge::handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::SharedPtr msg){
+  autonomous_t26_dv_dynamics_1_t dv_dynamics1_msg;
+  dv_dynamics1_msg.speed_actual = msg->speed_actual;
+  dv_dynamics1_msg.speed_target = msg->speed_target;
+  dv_dynamics1_msg.steering_angle_actual = msg->steering_angle_actual;
+  dv_dynamics1_msg.steering_angle_target = msg->steering_angle_target;
+  dv_dynamics1_msg.brake_hydr_actual = msg->brake_hydr_actual;
+  dv_dynamics1_msg.brake_hydr_target = msg->brake_hydr_target;
+  dv_dynamics1_msg.motor_moment_actual = msg->motor_moment_actual;
+  dv_dynamics1_msg.motor_moment_target = msg->motor_moment_target;
+
+  struct can_frame dv_dynamics1_frame;
+  int pack_len = autonomous_t26_dv_dynamics_1_pack(
+      dv_dynamics1_frame.data,
+      &dv_dynamics1_msg,
+      sizeof(dv_dynamics1_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack dv_dynamics1 message: %d", pack_len);
+      return;
+  }
+  dv_dynamics1_frame.can_id  = AUTONOMOUS_T26_DV_DYNAMICS_1_FRAME_ID;
+  dv_dynamics1_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(dv_dynamics1_frame);
+}
+
+void CanBridge::handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::SharedPtr msg){
+  autonomous_t26_dv_dynamics_2_t dv_dynamics2_msg;
+  dv_dynamics2_msg.acceleration_longitudinal = msg->acceleration_longitudinal;
+  dv_dynamics2_msg.acceleration_lateral = msg->acceleration_lateral;
+  dv_dynamics2_msg.yaw_rate = msg->yaw_rate;
+
+  struct can_frame dv_dynamics2_frame;
+  int pack_len = autonomous_t26_dv_dynamics_2_pack(
+      dv_dynamics2_frame.data,
+      &dv_dynamics2_msg,
+      sizeof(dv_dynamics2_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack dv_dynamics2 message: %d", pack_len);
+      return;
+  }
+  dv_dynamics2_frame.can_id  = AUTONOMOUS_T26_DV_DYNAMICS_2_FRAME_ID;
+  dv_dynamics2_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(dv_dynamics2_frame);
+}
+
+void CanBridge::handle_dv_status_message(const lart_msgs::msg::DvStatus::SharedPtr msg){
+  autonomous_t26_dv_status_t dv_status_msg;
+  dv_status_msg.as_status = msg->as_status;
+  dv_status_msg.asb_ebs_state = msg->asb_ebs_state;
+  dv_status_msg.ami_state = msg->ami_state;
+  dv_status_msg.steering_state = msg->steering_state;
+  dv_status_msg.asb_redundancy_state = msg->asb_redundancy_state;
+  dv_status_msg.lap_counter = msg->lap_counter;
+  dv_status_msg.cones_count_actual = msg->cones_count_actual;
+  dv_status_msg.cones_count_all = msg->cones_count_all;
+
+  struct can_frame dv_status_frame;
+  int pack_len = autonomous_t26_dv_status_pack(
+      dv_status_frame.data,
+      &dv_status_msg,
+      sizeof(dv_status_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack dv_status message: %d", pack_len);
+      return;
+  }
+  dv_status_frame.can_id  = AUTONOMOUS_T26_DV_STATUS_FRAME_ID;
+  dv_status_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(dv_status_frame);
+}
+
+void CanBridge::handle_jetson_message(const lart_msgs::msg::Jetson::SharedPtr msg){
+  autonomous_t26_jetson_t jetson_msg;
+  jetson_msg.as_state = msg->as_state;
+  jetson_msg.as_mission = msg->as_mission;
+  jetson_msg.temperature = msg->temperature;
+  jetson_msg.cpu = msg->cpu;
+  jetson_msg.gpu = msg->gpu;
+
+  struct can_frame jetson_frame;
+  int pack_len = autonomous_t26_jetson_pack(
+      jetson_frame.data,
+      &jetson_msg,
+      sizeof(jetson_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack jetson message: %d", pack_len);
+      return;
+  }
+  jetson_frame.can_id  = AUTONOMOUS_T26_JETSON_FRAME_ID;
+  jetson_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(jetson_frame);
+}
+
+int main(int argc, char ** argv)
 {
   (void)argc;
   (void)argv;
