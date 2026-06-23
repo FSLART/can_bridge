@@ -50,6 +50,8 @@ class CanBridge : public rclcpp::Node
     private:
         int s; //socket descriptor
         std::mutex socket_mutex;
+
+        bool asms = false;
         
         void read_can_frame();
         void send_can_frame(struct can_frame frame);

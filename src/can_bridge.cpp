@@ -79,6 +79,7 @@ void CanBridge::read_can_frame()
 void CanBridge::send_can_frame(struct can_frame frame)
 {
   std::lock_guard<std::mutex> guard(this->socket_mutex);
+  if(!this->asms) return;
   if (write(this->s, &frame, sizeof(frame)) < 0)
   {
     RCLCPP_ERROR(this->get_logger(), "Failed to send CAN frame: %s", strerror(errno));
@@ -104,6 +105,8 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       acu_ros_msg.ign = acu_msg.ign;
       acu_ros_msg.emergency_cause = acu_msg.emergency_cause;
       this->acu_pub_->publish(acu_ros_msg);
+
+      this->asms = acu_msg.asms; 
 
       break;
     }
