@@ -4,8 +4,7 @@ using std::placeholders::_1;
 using namespace std::placeholders;
 
 CanBridge::CanBridge() : Node("can_bridge"){
-  RCLCPP_INFO(this->get_logger(), "Can Bridge Node has been started");
-
+  
   // create a socket
   if ((this->s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
   {
@@ -30,6 +29,9 @@ CanBridge::CanBridge() : Node("can_bridge"){
 
   //Initiate publishers
   this->acu_pub_ = this->create_publisher<lart_msgs::msg::Acu>(TOPIC_CAN_ACU, 10);
+  // TO REMOVE
+  this->acu_mission_pub_ = this->create_publisher<std_msgs::msg::Float32>("/can/dbc/acu/mission_select", 10);
+
   this->cube_mars_feedback_pub_ = this->create_publisher<lart_msgs::msg::CubemarsFeedback>(TOPIC_CAN_CUBEMARS_FEEDBACK, 10);
   this->res_pub_ = this->create_publisher<lart_msgs::msg::Res>(TOPIC_CAN_RES, 10);
 
@@ -42,6 +44,7 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->aquisition3_pub_ = this->create_publisher<lart_msgs::msg::Aqt3>(TOPIC_CAN_AQUTION_AQT3, 10);
   this->aquisition4_pub_ = this->create_publisher<lart_msgs::msg::Aqt4>(TOPIC_CAN_AQUTION_AQT4, 10);
   this->aquisition7_pub_ = this->create_publisher<lart_msgs::msg::Aqt7>(TOPIC_CAN_AQUTION_AQT7, 10);
+  this->asf_signals_pub_ = this->create_publisher<lart_msgs::msg::AsfSignals>("/asf", 10);
 
   // Initiate subscribers
   this->dv_dynamics1_sub_ = this->create_subscription<lart_msgs::msg::DvDynamics1>(TOPIC_DV_DYNAMICS1, 10, std::bind(&CanBridge::handle_dv_dynamics1_message, this, _1));
@@ -52,12 +55,14 @@ CanBridge::CanBridge() : Node("can_bridge"){
   
   this->cubemars_position_loop_sub_ = this->create_subscription<lart_msgs::msg::CubemarsPositionLoop>(TOPIC_CUBEMARS_POSITION_LOOP, 10, std::bind(&CanBridge::handle_cubemars_position_loop_message, this, _1));
 
-  this->vcu_torque_target_sub_ = this->create_subscription<lart_msgs::msg::VcuTorqueTarget>(TOPIC_CONTROL_TORQUE_TARGET, 10, std::bind(&CanBridge::handle_vcu_torque_target_message, this, _1));
-  this->vcu_rpm_target_sub_ = this->create_subscription<lart_msgs::msg::VcuRpmTarget>(TOPIC_CONTROL_RPM_TARGET, 10, std::bind(&CanBridge::handle_vcu_rpm_target_message, this, _1));
+  this->vcu_torque_target_sub_ = this->create_subscription<lart_msgs::msg::VcuTorqueTarget>(TOPIC_VCU_TORQUE_TARGET, 10, std::bind(&CanBridge::handle_vcu_torque_target_message, this, _1));
+  this->vcu_rpm_target_sub_ = this->create_subscription<lart_msgs::msg::VcuRpmTarget>(TOPIC_VCU_RPM_TARGET, 10, std::bind(&CanBridge::handle_vcu_rpm_target_message, this, _1));
+  
   
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
   read_can_thread.detach();
+  RCLCPP_INFO(this->get_logger(), "Can Bridge Node has been started");
 }
 
 void CanBridge::read_can_frame()
@@ -105,6 +110,12 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       acu_ros_msg.ign = acu_msg.ign;
       acu_ros_msg.emergency_cause = acu_msg.emergency_cause;
       this->acu_pub_->publish(acu_ros_msg);
+
+
+      //TO REMOVE -> MESSAGE TO DASHBOARD FOR VSV
+      std_msgs::msg::Float32 mission_msg;
+      mission_msg.data = acu_msg.mission_select;
+      this->acu_mission_pub_->publish(mission_msg);
 
       this->asms = acu_msg.asms; 
 

@@ -15,6 +15,7 @@
 #include <sys/ioctl.h>
 #include "topics.h"
 #include "std_srvs/srv/trigger.hpp"
+#include "std_msgs/msg/float32.hpp"
 
 #include "lart_msgs/msg/dv_dynamics1.hpp"
 #include "lart_msgs/msg/dv_dynamics2.hpp"
@@ -81,6 +82,8 @@ class CanBridge : public rclcpp::Node
 
             //ACU
         rclcpp::Publisher<lart_msgs::msg::Acu>::SharedPtr acu_pub_;
+        rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr acu_mission_pub_;
+
 
             //Cubemars
         rclcpp::Publisher<lart_msgs::msg::CubemarsFeedback>::SharedPtr cube_mars_feedback_pub_;
