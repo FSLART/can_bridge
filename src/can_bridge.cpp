@@ -94,7 +94,7 @@ void CanBridge::send_can_frame(struct can_frame frame)
 void CanBridge::handle_can_frame(struct can_frame frame){
   // Handle the received CAN frame
   // RCLCPP_INFO(this->get_logger(), "Received CAN frame with ID: 0x%X", frame.can_id);
-  switch(frame.can_id){
+  switch(frame.can_id & CAN_EFF_MASK){
     case AUTONOMOUS_T26_ACU_FRAME_ID:{
       autonomous_t26_acu_t acu_msg;
       autonomous_t26_acu_unpack(&acu_msg, frame.data, frame.can_dlc);
