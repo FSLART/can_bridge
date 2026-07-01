@@ -100,15 +100,15 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_acu_unpack(&acu_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Acu acu_ros_msg;
       acu_ros_msg.header.stamp = this->now();
-      acu_ros_msg.assi_state = acu_msg.assi_state;
-      acu_ros_msg.acu_state = acu_msg.acu_state;
-      acu_ros_msg.acu_cpu_temp = acu_msg.acu_cpu_temp;
-      acu_ros_msg.mission_select = acu_msg.mission_select;
-      acu_ros_msg.as_state = acu_msg.as_state;
-      acu_ros_msg.emergency = acu_msg.emergency;
-      acu_ros_msg.asms = acu_msg.asms;
-      acu_ros_msg.ign = acu_msg.ign;
-      acu_ros_msg.emergency_cause = acu_msg.emergency_cause;
+      acu_ros_msg.assi_state = autonomous_t26_acu_assi_state_decode(acu_msg.assi_state);
+      acu_ros_msg.acu_state = autonomous_t26_acu_acu_state_decode(acu_msg.acu_state);
+      acu_ros_msg.acu_cpu_temp = autonomous_t26_acu_acu_cpu_temp_decode(acu_msg.acu_cpu_temp);
+      acu_ros_msg.mission_select = autonomous_t26_acu_mission_select_decode(acu_msg.mission_select);
+      acu_ros_msg.as_state = autonomous_t26_acu_as_state_decode(acu_msg.as_state);
+      acu_ros_msg.emergency = autonomous_t26_acu_emergency_decode(acu_msg.emergency);
+      acu_ros_msg.asms = autonomous_t26_acu_asms_decode(acu_msg.asms);
+      acu_ros_msg.ign = autonomous_t26_acu_ign_decode(acu_msg.ign);
+      acu_ros_msg.emergency_cause = autonomous_t26_acu_emergency_cause_decode(acu_msg.emergency_cause);
       this->acu_pub_->publish(acu_ros_msg);
 
 
@@ -126,11 +126,11 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_cube_mars_feedback_unpack(&cube_mars_feedback_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::CubemarsFeedback cube_mars_feedback_ros_msg;
       cube_mars_feedback_ros_msg.header.stamp = this->now();
-      cube_mars_feedback_ros_msg.position = cube_mars_feedback_msg.position;
-      cube_mars_feedback_ros_msg.speed_rpm = cube_mars_feedback_msg.speed_rpm;
-      cube_mars_feedback_ros_msg.current = cube_mars_feedback_msg.current;
-      cube_mars_feedback_ros_msg.driver_temp = cube_mars_feedback_msg.driver_temp;
-      cube_mars_feedback_ros_msg.error_code = cube_mars_feedback_msg.error_code;
+      cube_mars_feedback_ros_msg.position = autonomous_t26_cube_mars_feedback_position_decode(cube_mars_feedback_msg.position);
+      cube_mars_feedback_ros_msg.speed_rpm = autonomous_t26_cube_mars_feedback_speed_rpm_decode(cube_mars_feedback_msg.speed_rpm);
+      cube_mars_feedback_ros_msg.current = autonomous_t26_cube_mars_feedback_current_decode(cube_mars_feedback_msg.current);
+      cube_mars_feedback_ros_msg.driver_temp = autonomous_t26_cube_mars_feedback_driver_temp_decode(cube_mars_feedback_msg.driver_temp);
+      cube_mars_feedback_ros_msg.error_code = autonomous_t26_cube_mars_feedback_error_code_decode(cube_mars_feedback_msg.error_code);
       this->cube_mars_feedback_pub_->publish(cube_mars_feedback_ros_msg);
       break;
     }
@@ -139,9 +139,9 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt1_unpack(&aqt1_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt1 aqt1_ros_msg;
       aqt1_ros_msg.header.stamp = this->now();
-      aqt1_ros_msg.frt_brk_press = aqt1_msg.frt_brk_press;
-      aqt1_ros_msg.res = aqt1_msg.res;
-      aqt1_ros_msg.bots = aqt1_msg.bots;
+      aqt1_ros_msg.frt_brk_press = autonomous_t26_aqt1_frt_brk_press_decode(aqt1_msg.frt_brk_press);
+      aqt1_ros_msg.res = autonomous_t26_aqt1_res_decode(aqt1_msg.res);
+      aqt1_ros_msg.bots = autonomous_t26_aqt1_bots_decode(aqt1_msg.bots);
       this->aquisition1_pub_->publish(aqt1_ros_msg);
       break;
     }
@@ -150,7 +150,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt2_unpack(&aqt2_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt2 aqt2_ros_msg;
       aqt2_ros_msg.header.stamp = this->now();
-      aqt2_ros_msg.wheel_spd = aqt2_msg.wheel_spd;
+      aqt2_ros_msg.wheel_spd = autonomous_t26_aqt2_wheel_spd_decode(aqt2_msg.wheel_spd);
       this->aquisition2_pub_->publish(aqt2_ros_msg);
       break;
     }
@@ -159,7 +159,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt3_unpack(&aqt3_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt3 aqt3_ros_msg;
       aqt3_ros_msg.header.stamp = this->now();
-      aqt3_ros_msg.wheel_spd = aqt3_msg.wheel_spd;
+      aqt3_ros_msg.wheel_spd = autonomous_t26_aqt3_wheel_spd_decode(aqt3_msg.wheel_spd);
       this->aquisition3_pub_->publish(aqt3_ros_msg);
       break;
     }
@@ -168,11 +168,11 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt4_unpack(&aqt4_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt4 aqt4_ros_msg;
       aqt4_ros_msg.header.stamp = this->now();
-      aqt4_ros_msg.st_angle = aqt4_msg.st_angle;
-      aqt4_ros_msg.susp_l = aqt4_msg.susp_l;
-      aqt4_ros_msg.susp_r = aqt4_msg.susp_r;
-      aqt4_ros_msg.inertia = aqt4_msg.inertia;
-      aqt4_ros_msg.emergency = aqt4_msg.emergency;
+      aqt4_ros_msg.st_angle = autonomous_t26_aqt4_st_angle_decode(aqt4_msg.st_angle);
+      aqt4_ros_msg.susp_l = autonomous_t26_aqt4_susp_l_decode(aqt4_msg.susp_l);
+      aqt4_ros_msg.susp_r = autonomous_t26_aqt4_susp_r_decode(aqt4_msg.susp_r);
+      aqt4_ros_msg.inertia = autonomous_t26_aqt4_inertia_decode(aqt4_msg.inertia);
+      aqt4_ros_msg.emergency = autonomous_t26_aqt4_emergency_decode(aqt4_msg.emergency);
       this->aquisition4_pub_->publish(aqt4_ros_msg);
       break;
     }
@@ -181,7 +181,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_aqt7_unpack(&aqt7_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Aqt7 aqt7_ros_msg;
       aqt7_ros_msg.header.stamp = this->now();
-      aqt7_ros_msg.rear_brk_press = aqt7_msg.rear_brk_press;
+      aqt7_ros_msg.rear_brk_press = autonomous_t26_aqt7_rear_brk_press_decode(aqt7_msg.rear_brk_press);
       this->aquisition7_pub_->publish(aqt7_ros_msg);
       break;
     }
@@ -190,14 +190,14 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_vcu_ign_r2_d_unpack(&vcu_ign_r2_d_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::VcuIgnR2d vcu_ign_r2_d_ros_msg;
       vcu_ign_r2_d_ros_msg.header.stamp = this->now();
-      vcu_ign_r2_d_ros_msg.ignition_manual = vcu_ign_r2_d_msg.ignition_manual;
-      vcu_ign_r2_d_ros_msg.r2d_manual = vcu_ign_r2_d_msg.r2d_manual;
-      vcu_ign_r2_d_ros_msg.ignition_auto = vcu_ign_r2_d_msg.ignition_auto;
-      vcu_ign_r2_d_ros_msg.r2d_auto = vcu_ign_r2_d_msg.r2d_auto;
-      vcu_ign_r2_d_ros_msg.shutdown_signal = vcu_ign_r2_d_msg.shutdown_signal;
-      vcu_ign_r2_d_ros_msg.vcu_state = vcu_ign_r2_d_msg.vcu_state;
-      vcu_ign_r2_d_ros_msg.r2d_button_raw = vcu_ign_r2_d_msg.r2_d_button_raw;
-      vcu_ign_r2_d_ros_msg.ignition_switch_raw = vcu_ign_r2_d_msg.ignition_switch_raw;
+      vcu_ign_r2_d_ros_msg.ignition_manual = autonomous_t26_vcu_ign_r2_d_ignition_manual_decode(vcu_ign_r2_d_msg.ignition_manual);
+      vcu_ign_r2_d_ros_msg.r2d_manual = autonomous_t26_vcu_ign_r2_d_r2d_manual_decode(vcu_ign_r2_d_msg.r2d_manual);
+      vcu_ign_r2_d_ros_msg.ignition_auto = autonomous_t26_vcu_ign_r2_d_ignition_auto_decode(vcu_ign_r2_d_msg.ignition_auto);
+      vcu_ign_r2_d_ros_msg.r2d_auto = autonomous_t26_vcu_ign_r2_d_r2d_auto_decode(vcu_ign_r2_d_msg.r2d_auto);
+      vcu_ign_r2_d_ros_msg.shutdown_signal = autonomous_t26_vcu_ign_r2_d_shutdown_signal_decode(vcu_ign_r2_d_msg.shutdown_signal);
+      vcu_ign_r2_d_ros_msg.vcu_state = autonomous_t26_vcu_ign_r2_d_vcu_state_decode(vcu_ign_r2_d_msg.vcu_state);
+      vcu_ign_r2_d_ros_msg.r2d_button_raw = autonomous_t26_vcu_ign_r2_d_r2_d_button_raw_decode(vcu_ign_r2_d_msg.r2_d_button_raw);
+      vcu_ign_r2_d_ros_msg.ignition_switch_raw = autonomous_t26_vcu_ign_r2_d_ignition_switch_raw_decode(vcu_ign_r2_d_msg.ignition_switch_raw);
       this->vcu_ign_r2d_pub_->publish(vcu_ign_r2_d_ros_msg);
       
       break;
@@ -207,9 +207,9 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_vcu_hv_unpack(&vcu_hv_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::VcuHv vcu_hv_ros_msg;
       vcu_hv_ros_msg.header.stamp = this->now();
-      vcu_hv_ros_msg.hv = vcu_hv_msg.hv;
-      vcu_hv_ros_msg.brake_pressure_front = vcu_hv_msg.brake_pressure_front;
-      vcu_hv_ros_msg.brake_pressure_rear = vcu_hv_msg.brake_pressure_rear;
+      vcu_hv_ros_msg.hv = autonomous_t26_vcu_hv_hv_decode(vcu_hv_msg.hv);
+      vcu_hv_ros_msg.brake_pressure_front = autonomous_t26_vcu_hv_brake_pressure_front_decode(vcu_hv_msg.brake_pressure_front);
+      vcu_hv_ros_msg.brake_pressure_rear = autonomous_t26_vcu_hv_brake_pressure_rear_decode(vcu_hv_msg.brake_pressure_rear);
       this->vcu_hv_pub_->publish(vcu_hv_ros_msg);
       break;
     }
@@ -218,10 +218,10 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_vcu_rpm_unpack(&vcu_rpm_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::VcuRpm vcu_rpm_ros_msg;
       vcu_rpm_ros_msg.header.stamp = this->now();
-      vcu_rpm_ros_msg.motor_rpm_left = vcu_rpm_msg.motor_rpm_left;
-      vcu_rpm_ros_msg.motor_rpm_right = vcu_rpm_msg.motor_rpm_right;
-      vcu_rpm_ros_msg.motor_current_left = vcu_rpm_msg.motor_current_left;
-      vcu_rpm_ros_msg.motor_current_right = vcu_rpm_msg.motor_current_right;
+      vcu_rpm_ros_msg.motor_rpm_left = autonomous_t26_vcu_rpm_motor_rpm_left_decode(vcu_rpm_msg.motor_rpm_left);
+      vcu_rpm_ros_msg.motor_rpm_right = autonomous_t26_vcu_rpm_motor_rpm_right_decode(vcu_rpm_msg.motor_rpm_right);
+      vcu_rpm_ros_msg.motor_current_left = autonomous_t26_vcu_rpm_motor_current_left_decode(vcu_rpm_msg.motor_current_left);
+      vcu_rpm_ros_msg.motor_current_right = autonomous_t26_vcu_rpm_motor_current_right_decode(vcu_rpm_msg.motor_current_right);
       this->vcu_rpm_pub_->publish(vcu_rpm_ros_msg);
       break;
     }
@@ -230,7 +230,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_res_unpack(&res_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Res res_ros_msg;
       res_ros_msg.header.stamp = this->now();
-      res_ros_msg.signal = res_msg.signal;
+      res_ros_msg.signal = autonomous_t26_res_signal_decode(res_msg.signal);
       this->res_pub_->publish(res_ros_msg);
       break;
     }
@@ -240,10 +240,10 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       autonomous_t26_asf_signals_unpack(&asf_signals_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::AsfSignals asf_signals_ros_msg;
       asf_signals_ros_msg.header.stamp = this->now();
-      asf_signals_ros_msg.ebs_pressure_tank_front = asf_signals_msg.ebs_pressure_tank_front;
-      asf_signals_ros_msg.ebs_pressure_tank_rear = asf_signals_msg.ebs_pressure_tank_rear;
-      asf_signals_ros_msg.brake_pressure_front = asf_signals_msg.brake_pressure_front;
-      asf_signals_ros_msg.brake_pressure_rear = asf_signals_msg.brake_pressure_rear;
+      asf_signals_ros_msg.ebs_pressure_tank_front = autonomous_t26_asf_signals_ebs_pressure_tank_front_decode(asf_signals_msg.ebs_pressure_tank_front);
+      asf_signals_ros_msg.ebs_pressure_tank_rear = autonomous_t26_asf_signals_ebs_pressure_tank_rear_decode(asf_signals_msg.ebs_pressure_tank_rear);
+      asf_signals_ros_msg.brake_pressure_front = autonomous_t26_asf_signals_brake_pressure_front_decode(asf_signals_msg.brake_pressure_front);
+      asf_signals_ros_msg.brake_pressure_rear = autonomous_t26_asf_signals_brake_pressure_rear_decode(asf_signals_msg.brake_pressure_rear);
       this->asf_signals_pub_->publish(asf_signals_ros_msg);
       break;
     }
@@ -252,7 +252,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
 
 void CanBridge::handle_vcu_torque_target_message(const lart_msgs::msg::VcuTorqueTarget::SharedPtr msg){
   autonomous_t26_vcu_torque_target_t vcu_torque_target_msg;
-  vcu_torque_target_msg.torque_target = msg->torque_target;
+  vcu_torque_target_msg.torque_target = autonomous_t26_vcu_torque_target_torque_target_encode(msg->torque_target);
 
   struct can_frame vcu_torque_target_frame;
   int pack_len = autonomous_t26_vcu_torque_target_pack(
@@ -270,7 +270,7 @@ void CanBridge::handle_vcu_torque_target_message(const lart_msgs::msg::VcuTorque
 
 void CanBridge::handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget::SharedPtr msg){
   autonomous_t26_vcu_rpm_target_t vcu_rpm_target_msg;
-  vcu_rpm_target_msg.rpm_target = msg->rpm_target;
+  vcu_rpm_target_msg.rpm_target = autonomous_t26_vcu_rpm_target_rpm_target_encode(msg->rpm_target);
 
   struct can_frame vcu_rpm_target_frame;
   int pack_len = autonomous_t26_vcu_rpm_target_pack(
@@ -288,7 +288,7 @@ void CanBridge::handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget
 
 void CanBridge::handle_cubemars_position_loop_message(const lart_msgs::msg::CubemarsPositionLoop::SharedPtr msg){
   autonomous_t26_cube_mars_position_loop_t cubemars_position_loop_msg;
-  cubemars_position_loop_msg.position = msg->position;
+  cubemars_position_loop_msg.position = autonomous_t26_cube_mars_position_loop_position_encode(msg->position);
 
   struct can_frame cubemars_position_loop_frame;
   int pack_len = autonomous_t26_cube_mars_position_loop_pack(
@@ -306,14 +306,14 @@ void CanBridge::handle_cubemars_position_loop_message(const lart_msgs::msg::Cube
 
 void CanBridge::handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::SharedPtr msg){
   autonomous_t26_dv_dynamics_1_t dv_dynamics1_msg;
-  dv_dynamics1_msg.speed_actual = msg->speed_actual;
-  dv_dynamics1_msg.speed_target = msg->speed_target;
-  dv_dynamics1_msg.steering_angle_actual = msg->steering_angle_actual;
-  dv_dynamics1_msg.steering_angle_target = msg->steering_angle_target;
-  dv_dynamics1_msg.brake_hydr_actual = msg->brake_hydr_actual;
-  dv_dynamics1_msg.brake_hydr_target = msg->brake_hydr_target;
-  dv_dynamics1_msg.motor_moment_actual = msg->motor_moment_actual;
-  dv_dynamics1_msg.motor_moment_target = msg->motor_moment_target;
+  dv_dynamics1_msg.speed_actual = autonomous_t26_dv_dynamics_1_speed_actual_encode(msg->speed_actual);
+  dv_dynamics1_msg.speed_target = autonomous_t26_dv_dynamics_1_speed_target_encode(msg->speed_target);
+  dv_dynamics1_msg.steering_angle_actual = autonomous_t26_dv_dynamics_1_steering_angle_actual_encode(msg->steering_angle_actual);
+  dv_dynamics1_msg.steering_angle_target = autonomous_t26_dv_dynamics_1_steering_angle_target_encode(msg->steering_angle_target);
+  dv_dynamics1_msg.brake_hydr_actual = autonomous_t26_dv_dynamics_1_brake_hydr_actual_encode(msg->brake_hydr_actual);
+  dv_dynamics1_msg.brake_hydr_target = autonomous_t26_dv_dynamics_1_brake_hydr_target_encode(msg->brake_hydr_target);
+  dv_dynamics1_msg.motor_moment_actual = autonomous_t26_dv_dynamics_1_motor_moment_actual_encode(msg->motor_moment_actual);
+  dv_dynamics1_msg.motor_moment_target = autonomous_t26_dv_dynamics_1_motor_moment_target_encode(msg->motor_moment_target);
 
   struct can_frame dv_dynamics1_frame;
   int pack_len = autonomous_t26_dv_dynamics_1_pack(
@@ -331,9 +331,9 @@ void CanBridge::handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::S
 
 void CanBridge::handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::SharedPtr msg){
   autonomous_t26_dv_dynamics_2_t dv_dynamics2_msg;
-  dv_dynamics2_msg.acceleration_longitudinal = msg->acceleration_longitudinal;
-  dv_dynamics2_msg.acceleration_lateral = msg->acceleration_lateral;
-  dv_dynamics2_msg.yaw_rate = msg->yaw_rate;
+  dv_dynamics2_msg.acceleration_longitudinal = autonomous_t26_dv_dynamics_2_acceleration_longitudinal_encode(msg->acceleration_longitudinal);
+  dv_dynamics2_msg.acceleration_lateral = autonomous_t26_dv_dynamics_2_acceleration_lateral_encode(msg->acceleration_lateral);
+  dv_dynamics2_msg.yaw_rate = autonomous_t26_dv_dynamics_2_yaw_rate_encode(msg->yaw_rate);
 
   struct can_frame dv_dynamics2_frame;
   int pack_len = autonomous_t26_dv_dynamics_2_pack(
@@ -351,14 +351,14 @@ void CanBridge::handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::S
 
 void CanBridge::handle_dv_status_message(const lart_msgs::msg::DvStatus::SharedPtr msg){
   autonomous_t26_dv_status_t dv_status_msg;
-  dv_status_msg.as_status = msg->as_status;
-  dv_status_msg.asb_ebs_state = msg->asb_ebs_state;
-  dv_status_msg.ami_state = msg->ami_state;
-  dv_status_msg.steering_state = msg->steering_state;
-  dv_status_msg.asb_redundancy_state = msg->asb_redundancy_state;
-  dv_status_msg.lap_counter = msg->lap_counter;
-  dv_status_msg.cones_count_actual = msg->cones_count_actual;
-  dv_status_msg.cones_count_all = msg->cones_count_all;
+  dv_status_msg.as_status = autonomous_t26_dv_status_as_status_encode(msg->as_status);
+  dv_status_msg.asb_ebs_state = autonomous_t26_dv_status_asb_ebs_state_encode(msg->asb_ebs_state);
+  dv_status_msg.ami_state = autonomous_t26_dv_status_ami_state_encode(msg->ami_state);
+  dv_status_msg.steering_state = autonomous_t26_dv_status_steering_state_encode(msg->steering_state);
+  dv_status_msg.asb_redundancy_state = autonomous_t26_dv_status_asb_redundancy_state_encode(msg->asb_redundancy_state);
+  dv_status_msg.lap_counter = autonomous_t26_dv_status_lap_counter_encode(msg->lap_counter);
+  dv_status_msg.cones_count_actual = autonomous_t26_dv_status_cones_count_actual_encode(msg->cones_count_actual);
+  dv_status_msg.cones_count_all = autonomous_t26_dv_status_cones_count_all_encode(msg->cones_count_all);
 
   struct can_frame dv_status_frame;
   int pack_len = autonomous_t26_dv_status_pack(
@@ -376,11 +376,12 @@ void CanBridge::handle_dv_status_message(const lart_msgs::msg::DvStatus::SharedP
 
 void CanBridge::handle_jetson_message(const lart_msgs::msg::Jetson::SharedPtr msg){
   autonomous_t26_jetson_t jetson_msg;
-  jetson_msg.as_state = msg->as_state;
-  jetson_msg.as_mission = msg->as_mission;
-  jetson_msg.temperature = msg->temperature;
-  jetson_msg.cpu = msg->cpu;
-  jetson_msg.gpu = msg->gpu;
+  jetson_msg.as_state = autonomous_t26_jetson_as_state_encode(msg->as_state);
+  jetson_msg.as_mission = autonomous_t26_jetson_as_mission_encode(msg->as_mission);
+  jetson_msg.temperature = autonomous_t26_jetson_temperature_encode(msg->temperature);
+  jetson_msg.cpu = autonomous_t26_jetson_cpu_encode(msg->cpu);
+  jetson_msg.gpu = autonomous_t26_jetson_gpu_encode(msg->gpu);
+  jetson_msg.emergency_cause = autonomous_t26_jetson_emergency_cause_encode(msg->emergency_cause);
 
   struct can_frame jetson_frame;
   int pack_len = autonomous_t26_jetson_pack(
