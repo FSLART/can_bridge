@@ -288,7 +288,7 @@ void CanBridge::handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget
 
 void CanBridge::handle_cubemars_position_loop_message(const lart_msgs::msg::CubemarsPositionLoop::SharedPtr msg){
   autonomous_t26_cube_mars_position_loop_t cubemars_position_loop_msg;
-  cubemars_position_loop_msg.position = msg->position*0.0001;
+  cubemars_position_loop_msg.position = msg->position/0.0001;
 
   struct can_frame cubemars_position_loop_frame;
   int pack_len = autonomous_t26_cube_mars_position_loop_pack(
@@ -308,8 +308,8 @@ void CanBridge::handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::S
   autonomous_t26_dv_dynamics_1_t dv_dynamics1_msg;
   dv_dynamics1_msg.speed_actual = msg->speed_actual;
   dv_dynamics1_msg.speed_target = msg->speed_target;
-  dv_dynamics1_msg.steering_angle_actual = msg->steering_angle_actual*0.5;
-  dv_dynamics1_msg.steering_angle_target = msg->steering_angle_target*0.5;
+  dv_dynamics1_msg.steering_angle_actual = msg->steering_angle_actual/0.5;
+  dv_dynamics1_msg.steering_angle_target = msg->steering_angle_target/0.5;
   dv_dynamics1_msg.brake_hydr_actual = msg->brake_hydr_actual;
   dv_dynamics1_msg.brake_hydr_target = msg->brake_hydr_target;
   dv_dynamics1_msg.motor_moment_actual = msg->motor_moment_actual;
@@ -331,9 +331,9 @@ void CanBridge::handle_dv_dynamics1_message(const lart_msgs::msg::DvDynamics1::S
 
 void CanBridge::handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::SharedPtr msg){
   autonomous_t26_dv_dynamics_2_t dv_dynamics2_msg;
-  dv_dynamics2_msg.acceleration_longitudinal = msg->acceleration_longitudinal*0.001953125;
-  dv_dynamics2_msg.acceleration_lateral = msg->acceleration_lateral*0.001953125;
-  dv_dynamics2_msg.yaw_rate = msg->yaw_rate*0.0078125;
+  dv_dynamics2_msg.acceleration_longitudinal = msg->acceleration_longitudinal/0.001953125;
+  dv_dynamics2_msg.acceleration_lateral = msg->acceleration_lateral/0.001953125;
+  dv_dynamics2_msg.yaw_rate = msg->yaw_rate/0.0078125;
 
   struct can_frame dv_dynamics2_frame;
   int pack_len = autonomous_t26_dv_dynamics_2_pack(
