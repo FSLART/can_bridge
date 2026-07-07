@@ -252,7 +252,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
 
 void CanBridge::handle_vcu_torque_target_message(const lart_msgs::msg::VcuTorqueTarget::SharedPtr msg){
   autonomous_t26_vcu_torque_target_t vcu_torque_target_msg;
-  vcu_torque_target_msg.torque_target = autonomous_t26_vcu_torque_target_torque_target_encode(msg->torque_target);
+  vcu_torque_target_msg.torque_target =msg->torque_target;
 
   struct can_frame vcu_torque_target_frame;
   int pack_len = autonomous_t26_vcu_torque_target_pack(
@@ -270,7 +270,7 @@ void CanBridge::handle_vcu_torque_target_message(const lart_msgs::msg::VcuTorque
 
 void CanBridge::handle_vcu_rpm_target_message(const lart_msgs::msg::VcuRpmTarget::SharedPtr msg){
   autonomous_t26_vcu_rpm_target_t vcu_rpm_target_msg;
-  vcu_rpm_target_msg.rpm_target = autonomous_t26_vcu_rpm_target_rpm_target_encode(msg->rpm_target);
+  vcu_rpm_target_msg.rpm_target = msg->rpm_target;
 
   struct can_frame vcu_rpm_target_frame;
   int pack_len = autonomous_t26_vcu_rpm_target_pack(
@@ -351,14 +351,14 @@ void CanBridge::handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::S
 
 void CanBridge::handle_dv_status_message(const lart_msgs::msg::DvStatus::SharedPtr msg){
   autonomous_t26_dv_status_t dv_status_msg;
-  dv_status_msg.as_status = autonomous_t26_dv_status_as_status_encode(msg->as_status);
-  dv_status_msg.asb_ebs_state = autonomous_t26_dv_status_asb_ebs_state_encode(msg->asb_ebs_state);
-  dv_status_msg.ami_state = autonomous_t26_dv_status_ami_state_encode(msg->ami_state);
-  dv_status_msg.steering_state = autonomous_t26_dv_status_steering_state_encode(msg->steering_state);
-  dv_status_msg.asb_redundancy_state = autonomous_t26_dv_status_asb_redundancy_state_encode(msg->asb_redundancy_state);
-  dv_status_msg.lap_counter = autonomous_t26_dv_status_lap_counter_encode(msg->lap_counter);
-  dv_status_msg.cones_count_actual = autonomous_t26_dv_status_cones_count_actual_encode(msg->cones_count_actual);
-  dv_status_msg.cones_count_all = autonomous_t26_dv_status_cones_count_all_encode(msg->cones_count_all);
+  dv_status_msg.as_status = msg->as_status;
+  dv_status_msg.asb_ebs_state = msg->asb_ebs_state;
+  dv_status_msg.ami_state = msg->ami_state;
+  dv_status_msg.steering_state = msg->steering_state;
+  dv_status_msg.asb_redundancy_state = msg->asb_redundancy_state;
+  dv_status_msg.lap_counter = msg->lap_counter;
+  dv_status_msg.cones_count_actual = msg->cones_count_actual;
+  dv_status_msg.cones_count_all = msg->cones_count_all;
 
   struct can_frame dv_status_frame;
   int pack_len = autonomous_t26_dv_status_pack(
@@ -371,17 +371,17 @@ void CanBridge::handle_dv_status_message(const lart_msgs::msg::DvStatus::SharedP
   }
   dv_status_frame.can_id  = AUTONOMOUS_T26_DV_STATUS_FRAME_ID;
   dv_status_frame.can_dlc = static_cast<uint8_t>(pack_len);
-  this->send_can_frame(dv_status_frame);
+  // this->send_can_frame(dv_status_frame);
 }
 
 void CanBridge::handle_jetson_message(const lart_msgs::msg::Jetson::SharedPtr msg){
   autonomous_t26_jetson_t jetson_msg;
-  jetson_msg.as_state = autonomous_t26_jetson_as_state_encode(msg->as_state);
-  jetson_msg.as_mission = autonomous_t26_jetson_as_mission_encode(msg->as_mission);
-  jetson_msg.temperature = autonomous_t26_jetson_temperature_encode(msg->temperature);
-  jetson_msg.cpu = autonomous_t26_jetson_cpu_encode(msg->cpu);
-  jetson_msg.gpu = autonomous_t26_jetson_gpu_encode(msg->gpu);
-  jetson_msg.emergency_cause = autonomous_t26_jetson_emergency_cause_encode(msg->emergency_cause);
+  jetson_msg.as_state = msg->as_state;
+  jetson_msg.as_mission = msg->as_mission;
+  jetson_msg.temperature = msg->temperature;
+  jetson_msg.cpu = msg->cpu;
+  jetson_msg.gpu = msg->gpu;
+  jetson_msg.emergency_cause = msg->emergency_cause;
 
   struct can_frame jetson_frame;
   int pack_len = autonomous_t26_jetson_pack(
