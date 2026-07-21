@@ -225,7 +225,7 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       this->vcu_rpm_pub_->publish(vcu_rpm_ros_msg);
       break;
     }
-    case 0x181:{
+    case AUTONOMOUS_T26_RES_FRAME_ID:{
       autonomous_t26_res_t res_msg;
       autonomous_t26_res_unpack(&res_msg, frame.data, frame.can_dlc);
       lart_msgs::msg::Res res_ros_msg;
