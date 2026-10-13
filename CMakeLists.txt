@@ -11,6 +11,10 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(lart_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(xsens_mti_ros2_driver REQUIRED)
 
 include_directories(
   include ${CMAKE_SOURCE_DIR}/../lart_common
@@ -21,7 +25,7 @@ add_executable(can_bridge
               )
 
 
-ament_target_dependencies(can_bridge rclcpp std_msgs lart_msgs std_srvs)
+ament_target_dependencies(can_bridge rclcpp std_msgs lart_msgs std_srvs geometry_msgs nav_msgs sensor_msgs xsens_mti_ros2_driver)
 
 target_include_directories(can_bridge PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

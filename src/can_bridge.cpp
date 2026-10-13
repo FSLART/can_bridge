@@ -40,8 +40,6 @@ CanBridge::CanBridge() : Node("can_bridge"){
   this->vcu_rpm_pub_ = this->create_publisher<lart_msgs::msg::VcuRpm>(TOPIC_CAN_VCU_RPM, 10);
 
   this->aquisition1_pub_ = this->create_publisher<lart_msgs::msg::Aqt1>(TOPIC_CAN_AQUTION_AQT1, 10);
-  this->aquisition2_pub_ = this->create_publisher<lart_msgs::msg::Aqt2>(TOPIC_CAN_AQUTION_AQT2, 10);
-  this->aquisition3_pub_ = this->create_publisher<lart_msgs::msg::Aqt3>(TOPIC_CAN_AQUTION_AQT3, 10);
   this->aquisition4_pub_ = this->create_publisher<lart_msgs::msg::Aqt4>(TOPIC_CAN_AQUTION_AQT4, 10);
   this->aquisition7_pub_ = this->create_publisher<lart_msgs::msg::Aqt7>(TOPIC_CAN_AQUTION_AQT7, 10);
   this->asf_signals_pub_ = this->create_publisher<lart_msgs::msg::AsfSignals>("/asf", 10);
@@ -57,8 +55,18 @@ CanBridge::CanBridge() : Node("can_bridge"){
 
   this->vcu_torque_target_sub_ = this->create_subscription<lart_msgs::msg::VcuTorqueTarget>(TOPIC_VCU_TORQUE_TARGET, 10, std::bind(&CanBridge::handle_vcu_torque_target_message, this, _1));
   this->vcu_rpm_target_sub_ = this->create_subscription<lart_msgs::msg::VcuRpmTarget>(TOPIC_VCU_RPM_TARGET, 10, std::bind(&CanBridge::handle_vcu_rpm_target_message, this, _1));
-  
-  
+
+  this->imu_acceleration_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(XSENS_ACCELERATION_TOPIC, 10, std::bind(&CanBridge::handle_imu_acceleration_message, this, _1));
+  this->imu_angular_velocity_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(XSENS_ANGULAR_VELOCITY_TOPIC, 10, std::bind(&CanBridge::handle_imu_angular_velocity_message, this, _1));
+  this->imu_gnss_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(XSENS_GNSS_POSE_TOPIC, 10, std::bind(&CanBridge::handle_imu_gnss_pose_message, this, _1));
+  this->imu_odometry_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(XSENS_ODOMETRY_TOPIC, 10, std::bind(&CanBridge::handle_imu_odometry_message, this, _1));
+  this->imu_euler_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(XSENS_EULER_TOPIC, 10, std::bind(&CanBridge::handle_imu_euler_message, this, _1));
+  this->imu_status_sub_ = this->create_subscription<xsens_mti_ros2_driver::msg::XsStatusWord>(XSENS_STATUS_TOPIC, 10, std::bind(&CanBridge::handle_imu_status_message, this, _1));
+  this->imu_temperature_sub_ = this->create_subscription<sensor_msgs::msg::Temperature>(XSENS_TEMPERATURE_TOPIC, 10, std::bind(&CanBridge::handle_imu_temperature_message, this, _1));
+  this->imu_filter_velocity_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(XSENS_FILTER_VELOCITY_TOPIC, 10, std::bind(&CanBridge::handle_imu_filter_velocity_message, this, _1));
+  this->imu_free_acceleration_sub_ = this->create_subscription<geometry_msgs::msg::Vector3Stamped>(XSENS_FREE_ACCELERATION_TOPIC, 10, std::bind(&CanBridge::handle_imu_free_acceleration_message, this, _1));
+
+
   // create a thread to read CAN frames
   std::thread read_can_thread(&CanBridge::read_can_frame, this);
   read_can_thread.detach();
@@ -83,12 +91,30 @@ void CanBridge::read_can_frame()
 
 void CanBridge::send_can_frame(struct can_frame frame)
 {
-  std::lock_guard<std::mutex> guard(this->socket_mutex);
   if(!this->asms) return;
+  this->write_can_frame(frame);
+}
+
+// Sends even with ASMS off, used for the IMU frames
+void CanBridge::write_can_frame(struct can_frame frame)
+{
+  std::lock_guard<std::mutex> guard(this->socket_mutex);
   if (write(this->s, &frame, sizeof(frame)) < 0)
   {
     RCLCPP_ERROR(this->get_logger(), "Failed to send CAN frame: %s", strerror(errno));
   }
+}
+
+// Keeps an IMU topic at or below IMU_CAN_FREQUENCY. The deadline advances by one period per
+// sent frame instead of restarting from now, so a source already at that rate is not halved by jitter
+bool CanBridge::imu_frame_due(std::chrono::steady_clock::time_point &next_send)
+{
+  const auto now = std::chrono::steady_clock::now();
+  if (now < next_send) return false;
+  const auto period = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+      std::chrono::duration<double>(1.0 / IMU_CAN_FREQUENCY));
+  next_send = std::max(next_send + period, now);
+  return true;
 }
 
 void CanBridge::handle_can_frame(struct can_frame frame){
@@ -143,24 +169,6 @@ void CanBridge::handle_can_frame(struct can_frame frame){
       aqt1_ros_msg.res = aqt1_msg.res;
       aqt1_ros_msg.bots = aqt1_msg.bots;
       this->aquisition1_pub_->publish(aqt1_ros_msg);
-      break;
-    }
-    case AUTONOMOUS_T26_AQT2_FRAME_ID:{
-      autonomous_t26_aqt2_t aqt2_msg;
-      autonomous_t26_aqt2_unpack(&aqt2_msg, frame.data, frame.can_dlc);
-      lart_msgs::msg::Aqt2 aqt2_ros_msg;
-      aqt2_ros_msg.header.stamp = this->now();
-      aqt2_ros_msg.wheel_spd = aqt2_msg.wheel_spd*0.1;
-      this->aquisition2_pub_->publish(aqt2_ros_msg);
-      break;
-    }
-    case AUTONOMOUS_T26_AQT3_FRAME_ID:{
-      autonomous_t26_aqt3_t aqt3_msg;
-      autonomous_t26_aqt3_unpack(&aqt3_msg, frame.data, frame.can_dlc);
-      lart_msgs::msg::Aqt3 aqt3_ros_msg;
-      aqt3_ros_msg.header.stamp = this->now();
-      aqt3_ros_msg.wheel_spd = aqt3_msg.wheel_spd*0.1;
-      this->aquisition3_pub_->publish(aqt3_ros_msg);
       break;
     }
     case AUTONOMOUS_T26_AQT4_FRAME_ID:{
@@ -349,29 +357,25 @@ void CanBridge::handle_dv_dynamics2_message(const lart_msgs::msg::DvDynamics2::S
   this->send_can_frame(dv_dynamics2_frame);
 }
 
+// DV_status is transmitted by the ACU, the Jetson only sends its SLAM part in SLAM_STATS_CAN
 void CanBridge::handle_dv_status_message(const lart_msgs::msg::DvStatus::SharedPtr msg){
-  autonomous_t26_dv_status_t dv_status_msg;
-  dv_status_msg.as_status = msg->as_status;
-  dv_status_msg.asb_ebs_state = msg->asb_ebs_state;
-  dv_status_msg.ami_state = msg->ami_state;
-  dv_status_msg.steering_state = msg->steering_state;
-  dv_status_msg.asb_redundancy_state = msg->asb_redundancy_state;
-  dv_status_msg.lap_counter = msg->lap_counter;
-  dv_status_msg.cones_count_actual = msg->cones_count_actual;
-  dv_status_msg.cones_count_all = msg->cones_count_all;
+  autonomous_t26_slam_stats_can_t slam_stats_msg;
+  slam_stats_msg.lap_counter = msg->lap_counter;
+  slam_stats_msg.cones_count_actual = msg->cones_count_actual;
+  slam_stats_msg.cones_count_all = msg->cones_count_all;
 
-  struct can_frame dv_status_frame;
-  int pack_len = autonomous_t26_dv_status_pack(
-      dv_status_frame.data,
-      &dv_status_msg,
-      sizeof(dv_status_frame.data));
+  struct can_frame slam_stats_frame;
+  int pack_len = autonomous_t26_slam_stats_can_pack(
+      slam_stats_frame.data,
+      &slam_stats_msg,
+      sizeof(slam_stats_frame.data));
   if (pack_len < 0) {
-      RCLCPP_ERROR(this->get_logger(), "Failed to pack dv_status message: %d", pack_len);
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack slam_stats_can message: %d", pack_len);
       return;
   }
-  dv_status_frame.can_id  = AUTONOMOUS_T26_DV_STATUS_FRAME_ID;
-  dv_status_frame.can_dlc = static_cast<uint8_t>(pack_len);
-  // this->send_can_frame(dv_status_frame);
+  slam_stats_frame.can_id  = AUTONOMOUS_T26_SLAM_STATS_CAN_FRAME_ID;
+  slam_stats_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->send_can_frame(slam_stats_frame);
 }
 
 void CanBridge::handle_jetson_message(const lart_msgs::msg::Jetson::SharedPtr msg){
@@ -395,6 +399,258 @@ void CanBridge::handle_jetson_message(const lart_msgs::msg::Jetson::SharedPtr ms
   jetson_frame.can_id  = AUTONOMOUS_T26_JETSON_FRAME_ID;
   jetson_frame.can_dlc = static_cast<uint8_t>(pack_len);
   this->send_can_frame(jetson_frame);
+}
+
+void CanBridge::handle_imu_acceleration_message(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_acceleration_next_send)) return;
+
+  autonomous_t26_imu_acceleration_t imu_acceleration_msg;
+  imu_acceleration_msg.acceleration_x = msg->vector.x/0.01;
+  imu_acceleration_msg.acceleration_y = msg->vector.y/0.01;
+  imu_acceleration_msg.acceleration_z = msg->vector.z/0.01;
+
+  struct can_frame imu_acceleration_frame;
+  int pack_len = autonomous_t26_imu_acceleration_pack(
+      imu_acceleration_frame.data,
+      &imu_acceleration_msg,
+      sizeof(imu_acceleration_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_acceleration message: %d", pack_len);
+      return;
+  }
+  imu_acceleration_frame.can_id  = AUTONOMOUS_T26_IMU_ACCELERATION_FRAME_ID;
+  imu_acceleration_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_acceleration_frame);
+}
+
+void CanBridge::handle_imu_angular_velocity_message(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_angular_velocity_next_send)) return;
+
+  autonomous_t26_imu_angular_velocity_t imu_angular_velocity_msg;
+  imu_angular_velocity_msg.angular_velocity_x = msg->vector.x/0.001;
+  imu_angular_velocity_msg.angular_velocity_y = msg->vector.y/0.001;
+  imu_angular_velocity_msg.angular_velocity_z = msg->vector.z/0.001;
+
+  struct can_frame imu_angular_velocity_frame;
+  int pack_len = autonomous_t26_imu_angular_velocity_pack(
+      imu_angular_velocity_frame.data,
+      &imu_angular_velocity_msg,
+      sizeof(imu_angular_velocity_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_angular_velocity message: %d", pack_len);
+      return;
+  }
+  imu_angular_velocity_frame.can_id  = AUTONOMOUS_T26_IMU_ANGULAR_VELOCITY_FRAME_ID;
+  imu_angular_velocity_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_angular_velocity_frame);
+}
+
+// The Xsens driver puts latitude/longitude/altitude in pose.position x/y/z
+void CanBridge::handle_imu_gnss_pose_message(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_gnss_pose_next_send)) return;
+
+  autonomous_t26_imu_gnss_position_t imu_gnss_position_msg;
+  imu_gnss_position_msg.latitude = msg->pose.position.x/1e-7;
+  imu_gnss_position_msg.longitude = msg->pose.position.y/1e-7;
+
+  struct can_frame imu_gnss_position_frame;
+  int pack_len = autonomous_t26_imu_gnss_position_pack(
+      imu_gnss_position_frame.data,
+      &imu_gnss_position_msg,
+      sizeof(imu_gnss_position_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_gnss_position message: %d", pack_len);
+      return;
+  }
+  imu_gnss_position_frame.can_id  = AUTONOMOUS_T26_IMU_GNSS_POSITION_FRAME_ID;
+  imu_gnss_position_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_gnss_position_frame);
+
+  autonomous_t26_imu_gnss_altitude_t imu_gnss_altitude_msg;
+  imu_gnss_altitude_msg.altitude = msg->pose.position.z/0.001;
+
+  struct can_frame imu_gnss_altitude_frame;
+  pack_len = autonomous_t26_imu_gnss_altitude_pack(
+      imu_gnss_altitude_frame.data,
+      &imu_gnss_altitude_msg,
+      sizeof(imu_gnss_altitude_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_gnss_altitude message: %d", pack_len);
+      return;
+  }
+  imu_gnss_altitude_frame.can_id  = AUTONOMOUS_T26_IMU_GNSS_ALTITUDE_FRAME_ID;
+  imu_gnss_altitude_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_gnss_altitude_frame);
+
+  autonomous_t26_imu_orientation_t imu_orientation_msg;
+  imu_orientation_msg.quaternion_w = msg->pose.orientation.w/0.0001;
+  imu_orientation_msg.quaternion_x = msg->pose.orientation.x/0.0001;
+  imu_orientation_msg.quaternion_y = msg->pose.orientation.y/0.0001;
+  imu_orientation_msg.quaternion_z = msg->pose.orientation.z/0.0001;
+
+  struct can_frame imu_orientation_frame;
+  pack_len = autonomous_t26_imu_orientation_pack(
+      imu_orientation_frame.data,
+      &imu_orientation_msg,
+      sizeof(imu_orientation_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_orientation message: %d", pack_len);
+      return;
+  }
+  imu_orientation_frame.can_id  = AUTONOMOUS_T26_IMU_ORIENTATION_FRAME_ID;
+  imu_orientation_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_orientation_frame);
+}
+
+// twist.twist.linear is already rotated into the IMU frame by the Xsens driver
+void CanBridge::handle_imu_odometry_message(const nav_msgs::msg::Odometry::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_odometry_next_send)) return;
+
+  autonomous_t26_imu_velocity_t imu_velocity_msg;
+  imu_velocity_msg.velocity_x = msg->twist.twist.linear.x/0.01;
+  imu_velocity_msg.velocity_y = msg->twist.twist.linear.y/0.01;
+  imu_velocity_msg.velocity_z = msg->twist.twist.linear.z/0.01;
+
+  struct can_frame imu_velocity_frame;
+  int pack_len = autonomous_t26_imu_velocity_pack(
+      imu_velocity_frame.data,
+      &imu_velocity_msg,
+      sizeof(imu_velocity_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_velocity message: %d", pack_len);
+      return;
+  }
+  imu_velocity_frame.can_id  = AUTONOMOUS_T26_IMU_VELOCITY_FRAME_ID;
+  imu_velocity_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_velocity_frame);
+}
+
+// /filter/euler is roll/pitch/yaw in x/y/z, already in degrees
+void CanBridge::handle_imu_euler_message(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_euler_next_send)) return;
+
+  autonomous_t26_imu_euler_t imu_euler_msg;
+  imu_euler_msg.roll = msg->vector.x/0.01;
+  imu_euler_msg.pitch = msg->vector.y/0.01;
+  imu_euler_msg.yaw = msg->vector.z/0.01;
+
+  struct can_frame imu_euler_frame;
+  int pack_len = autonomous_t26_imu_euler_pack(
+      imu_euler_frame.data,
+      &imu_euler_msg,
+      sizeof(imu_euler_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_euler message: %d", pack_len);
+      return;
+  }
+  imu_euler_frame.can_id  = AUTONOMOUS_T26_IMU_EULER_FRAME_ID;
+  imu_euler_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_euler_frame);
+}
+
+void CanBridge::handle_imu_status_message(const xsens_mti_ros2_driver::msg::XsStatusWord::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_status_next_send)) return;
+
+  autonomous_t26_imu_status_t imu_status_msg;
+  imu_status_msg.self_test = msg->selftest;
+  imu_status_msg.filter_valid = msg->filter_valid;
+  imu_status_msg.gnss_fix = msg->gnss_fix;
+  imu_status_msg.no_rotation_update_status = msg->no_rotation_update_status;
+  imu_status_msg.representative_motion = msg->representative_motion;
+  imu_status_msg.clock_bias_estimation = msg->clock_bias_estimation;
+  imu_status_msg.clip_acc_x = msg->clipflag_acc_x;
+  imu_status_msg.clip_acc_y = msg->clipflag_acc_y;
+  imu_status_msg.clip_acc_z = msg->clipflag_acc_z;
+  imu_status_msg.clip_gyr_x = msg->clipflag_gyr_x;
+  imu_status_msg.clip_gyr_y = msg->clipflag_gyr_y;
+  imu_status_msg.clip_gyr_z = msg->clipflag_gyr_z;
+  imu_status_msg.clip_mag_x = msg->clipflag_mag_x;
+  imu_status_msg.clip_mag_y = msg->clipflag_mag_y;
+  imu_status_msg.clip_mag_z = msg->clipflag_mag_z;
+  imu_status_msg.clipping_indication = msg->clipping_indication;
+  imu_status_msg.sync_in_marker = msg->syncin_marker;
+  imu_status_msg.sync_out_marker = msg->syncout_marker;
+  imu_status_msg.filter_mode = msg->filter_mode;
+  imu_status_msg.gnss_time_pulse = msg->have_gnss_time_pulse;
+  imu_status_msg.rtk_status = msg->rtk_status;
+
+  struct can_frame imu_status_frame;
+  int pack_len = autonomous_t26_imu_status_pack(
+      imu_status_frame.data,
+      &imu_status_msg,
+      sizeof(imu_status_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_status message: %d", pack_len);
+      return;
+  }
+  imu_status_frame.can_id  = AUTONOMOUS_T26_IMU_STATUS_FRAME_ID;
+  imu_status_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_status_frame);
+}
+
+void CanBridge::handle_imu_temperature_message(const sensor_msgs::msg::Temperature::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_temperature_next_send)) return;
+
+  autonomous_t26_imu_temperature_t imu_temperature_msg;
+  imu_temperature_msg.temperature = msg->temperature/0.01;
+
+  struct can_frame imu_temperature_frame;
+  int pack_len = autonomous_t26_imu_temperature_pack(
+      imu_temperature_frame.data,
+      &imu_temperature_msg,
+      sizeof(imu_temperature_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_temperature message: %d", pack_len);
+      return;
+  }
+  imu_temperature_frame.can_id  = AUTONOMOUS_T26_IMU_TEMPERATURE_FRAME_ID;
+  imu_temperature_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_temperature_frame);
+}
+
+// Sent as received from the driver (ENU), no rotation into the IMU frame
+void CanBridge::handle_imu_filter_velocity_message(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_filter_velocity_next_send)) return;
+
+  autonomous_t26_imu_filter_velocity_t imu_filter_velocity_msg;
+  imu_filter_velocity_msg.velocity_x = msg->vector.x/0.01;
+  imu_filter_velocity_msg.velocity_y = msg->vector.y/0.01;
+  imu_filter_velocity_msg.velocity_z = msg->vector.z/0.01;
+
+  struct can_frame imu_filter_velocity_frame;
+  int pack_len = autonomous_t26_imu_filter_velocity_pack(
+      imu_filter_velocity_frame.data,
+      &imu_filter_velocity_msg,
+      sizeof(imu_filter_velocity_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_filter_velocity message: %d", pack_len);
+      return;
+  }
+  imu_filter_velocity_frame.can_id  = AUTONOMOUS_T26_IMU_FILTER_VELOCITY_FRAME_ID;
+  imu_filter_velocity_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_filter_velocity_frame);
+}
+
+void CanBridge::handle_imu_free_acceleration_message(const geometry_msgs::msg::Vector3Stamped::SharedPtr msg){
+  if (!this->imu_frame_due(this->imu_free_acceleration_next_send)) return;
+
+  autonomous_t26_imu_free_acceleration_t imu_free_acceleration_msg;
+  imu_free_acceleration_msg.free_acceleration_x = msg->vector.x/0.01;
+  imu_free_acceleration_msg.free_acceleration_y = msg->vector.y/0.01;
+  imu_free_acceleration_msg.free_acceleration_z = msg->vector.z/0.01;
+
+  struct can_frame imu_free_acceleration_frame;
+  int pack_len = autonomous_t26_imu_free_acceleration_pack(
+      imu_free_acceleration_frame.data,
+      &imu_free_acceleration_msg,
+      sizeof(imu_free_acceleration_frame.data));
+  if (pack_len < 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to pack imu_free_acceleration message: %d", pack_len);
+      return;
+  }
+  imu_free_acceleration_frame.can_id  = AUTONOMOUS_T26_IMU_FREE_ACCELERATION_FRAME_ID;
+  imu_free_acceleration_frame.can_dlc = static_cast<uint8_t>(pack_len);
+  this->write_can_frame(imu_free_acceleration_frame);
 }
 
 int main(int argc, char ** argv)
